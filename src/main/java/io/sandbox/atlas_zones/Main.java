@@ -7,6 +7,7 @@ import io.sandbox.atlas_zones.block_entities.BlockEntityLoader;
 import io.sandbox.atlas_zones.blocks.BlockLoader;
 import io.sandbox.atlas_zones.config.AtlasZonesConfig;
 import io.sandbox.atlas_zones.config.BlockBreakConfig;
+import io.sandbox.atlas_zones.config.BlockPlaceConfig;
 import io.sandbox.atlas_zones.config.ElytraConfig;
 import io.sandbox.atlas_zones.config.PlayerRespawnConfig;
 import io.sandbox.atlas_zones.items.ItemLoader;
@@ -38,6 +39,7 @@ public class Main implements ModInitializer {
 
     // Allow/disable block breaking in zone config (has allow list)
     BlockBreakConfig.initBlockBreakListener();
+    BlockPlaceConfig.initBlockPlaceListener();
 
     // Load custom Items/Blocks/Screens
     ItemLoader.init();

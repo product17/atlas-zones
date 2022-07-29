@@ -52,20 +52,20 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
   }
 
   public static void tick(World world, BlockPos pos, BlockState state, AtlasDeviceBlockEntity be) {
-    if (be.zoneInstanceId != null) {
-      Zone zone = ZoneManager.getZone(be.zoneInstanceId);
+    // if (be.zoneInstanceId != null) {
+    //   Zone zone = ZoneManager.getZone(be.zoneInstanceId);
 
-      if (zone == null) {
-        // make sure to set zoneInstanceId to null to prevent this from looping
-        be.zoneInstanceId = null;
-        return;
-      }
+    //   if (zone == null) {
+    //     // make sure to set zoneInstanceId to null to prevent this from looping
+    //     be.zoneInstanceId = null;
+    //     return;
+    //   }
 
-      if (zone.getPlayerCount() == 0) {
-        // Once the zone hits the max ticks it will remove itself
-        zone.incrementEmptyTicks();
-      }
-    }
+    //   if (zone.getPlayerCount() == 0) {
+    //     // Once the zone hits the max ticks it will remove itself
+    //     zone.incrementEmptyTicks();
+    //   }
+    // }
   }
 
   @Override

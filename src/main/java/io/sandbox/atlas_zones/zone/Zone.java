@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
+import io.sandbox.atlas_zones.Main;
 import io.sandbox.atlas_zones.config.data_types.MobDefinition;
 import io.sandbox.atlas_zones.config.data_types.ZoneConfig;
 import io.sandbox.atlas_zones.zone.data_types.MobDetails;
@@ -16,8 +18,10 @@ import io.sandbox.atlas_zones.zone.data_types.Room;
 import io.sandbox.atlas_zones.zone.data_types.RoomData;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.ChestBlockEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
@@ -28,6 +32,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PiglinBruteEntity;
 import net.minecraft.entity.mob.PiglinEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -43,6 +48,7 @@ import net.minecraft.world.dimension.DimensionType;
 public class Zone {
     private BlockPos blockPos;
     private List<Block> breakableBlocks;
+    private List<Item> placeableBlocks;
     private StructureBuildQueue buildConfig;
     private int difficulty = 0;
     private String dimentionType;
@@ -158,8 +164,76 @@ public class Zone {
         return false;
     }
 
+    public Boolean canPlaceBlock(PlayerEntity player) {
+        if (this.zoneConfig.placeableBlocks.size() > 0) {
+            if (this.placeableBlocks == null) {
+                this.placeableBlocks = new ArrayList<>();
+                for (String itemName : this.zoneConfig.placeableBlocks) {
+                    this.placeableBlocks.add(Registry.ITEM.get(new Identifier(itemName)));
+                }
+            }
+
+            for (Item placeableBlock : this.placeableBlocks) {
+                if (player.getMainHandStack().getItem().equals(placeableBlock)) {
+                    System.out.println("Check: it is this Item");
+                    return true;
+                }
+            }
+            // Registry.ITEM.get(new Identifier(""));
+            // if (this.breakableBlocks == null) {
+            //     this.breakableBlocks = new ArrayList<>();
+            //     for (String blockName : this.zoneConfig.breakableBlocks) {
+            //         this.breakableBlocks.add(Registry.BLOCK.get(new Identifier(blockName)));
+            //     }
+            // }
+
+            
+
+            // String msg = String.join(", ", this.zoneConfig.breakableBlocks);
+            // Text text = Text.of("Can only Break: " + msg);
+            // player.sendMessage(text, true);
+            // return false;
+        }
+
+        return false;
+    }
+
     public Boolean canUseElytra() {
         return this.zoneConfig.elytraAllowed;
+    }
+
+    public void cleanupBlocks() {
+        List<BlockPos> blockList = getBlockList();
+        for (BlockPos blockPos : blockList) {
+            if (blockPos != null) {
+                // this.world.getblock
+                BlockState existingBlock = this.world.getBlockState(blockPos);
+                if (existingBlock != null) {
+                    if (existingBlock.isOf(Blocks.CHEST)) {
+                        Optional<ChestBlockEntity> chest = this.world.getBlockEntity(blockPos, BlockEntityType.CHEST);
+                        if (chest.isPresent()) {
+                            ChestBlockEntity chestEntity = chest.get();
+                            // chestEntity.
+                            // TODO: figure out later to cleanup better
+                        }
+                    }
+
+                    BlockState blockState = Registry.BLOCK.get(new Identifier("air")).getDefaultState();
+                    this.world.setBlockState(blockPos, blockState);
+                }
+            }
+        }
+    }
+
+    public void cleanupMobs() {
+        Set<UUID> mobIds = mobToRoomMap.keySet();
+        for(UUID mobId : mobIds) {
+            Entity mob = world.getEntity(mobId);
+            if (mob != null) {
+                // Discard doesn't trigger kill events
+                mob.discard();
+            }
+        }
     }
 
     public List<BlockPos> getBlockList() {
@@ -222,7 +296,6 @@ public class Zone {
 
     private void preventZombification(MobEntity mob) {
         if (mob instanceof PiglinEntity) {
-            System.out.println("Dis is Piglin");
             ((PiglinEntity)mob).setImmuneToZombification(true);
         }
 
@@ -257,7 +330,7 @@ public class Zone {
         if (lootTable != null) {
             NbtCompound nbt = new NbtCompound();
             nbt.putString("DeathLootTable", lootTable);
-            nbt.putLong("DeathLootTableSeed", (new Random()).nextLong());
+            nbt.putLong("DeathLootTableSeed", this.random.nextLong());
             mob.readNbt(nbt);
         }
 
@@ -315,7 +388,16 @@ public class Zone {
 
     public void removePlayer(PlayerEntity player) {
         ServerPlayerEntity servPlayer = (ServerPlayerEntity)player;
+        Main.LOGGER.info("Removing Player from zone: " + servPlayer.getName());
         this.players.remove(player);
+        if (this.getPlayerCount() <= 0) {
+            this.cleanupMobs();
+            this.cleanupBlocks();
+            Main.LOGGER.info("Cleaning up Zone");
+
+            ZoneManager.cleanupZone(this.id);
+        }
+
         PreviousPos previousPos = this.previousPlayerPositions.get(player.getUuid());
         servPlayer.teleport(
             this.world.getServer().getWorld(previousPos.worldKey),
@@ -328,7 +410,7 @@ public class Zone {
 
         // just always set this back to 0 when someone leaves
         // it will only start counting when no one is left though
-        this.emptyTicks = 0;
+        this.emptyTicks = 0; // not used at this time
     }
 
     public void respawnPlayer(ServerPlayerEntity player) {
@@ -337,23 +419,6 @@ public class Zone {
 
     public void incrementEmptyTicks() {
         this.emptyTicks++;
-        if (this.emptyTicks >= this.emptyTicksMax) {
-            // Run Cleanup
-            // This can be batched over several ticks if it gets laggy
-            List<BlockPos> blockList = getBlockList();
-            for (BlockPos blockPos : blockList) {
-                if (blockPos != null) {
-                    BlockState existingBlock = this.world.getBlockState(blockPos);
-                    if (existingBlock != null) {
-                        BlockState blockState = Registry.BLOCK.get(new Identifier("air")).getDefaultState();
-                        // System.out.println("Is this even hitting?");
-                        this.world.setBlockState(blockPos, blockState);
-                    }
-                }
-            }
-
-            ZoneManager.cleanupZone(this.id);
-        }
     }
 
     public void setWorld(ServerWorld world) {

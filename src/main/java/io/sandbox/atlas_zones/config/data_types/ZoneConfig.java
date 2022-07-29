@@ -6,6 +6,7 @@ import java.util.List;
 public class ZoneConfig {
   public Boolean elytraAllowed = false;
   public List<String> breakableBlocks = new ArrayList<>();
+  public List<String> placeableBlocks = new ArrayList<>();
   public List<LootTier> chestLootTables = new ArrayList<>();
   public List<LootTier> defaultLootTables = new ArrayList<>();
   public Boolean keepInventoryOnDeath = false;
