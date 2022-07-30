@@ -171,11 +171,17 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
     //   return;
     // }
 
-    Zone existingZone = ZoneManager.getZoneAtLocation(player.getWorld().getDimension(), pos);
+    Zone existingZone = ZoneManager.getZoneAtLocation(pos);
     CurrentZoneData zoneData = new CurrentZoneData();
     zoneData.zoneName = "piglin_gate:base_lab";
     zoneData.blockPos = pos;
     zoneData.active = existingZone != null;
+    if (existingZone == null) {
+      Long cooldown = player.getWorld().getTime() - ZoneManager.getZoneCooldown(pos);
+      if (cooldown < ZoneManager.DEFAULT_COOLDOWN_TICKS) {
+        zoneData.cooldownLeft = cooldown;
+      }
+    }
 
     System.out.println(gson.toJson(zoneData));
 

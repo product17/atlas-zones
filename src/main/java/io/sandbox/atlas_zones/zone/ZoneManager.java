@@ -1,5 +1,7 @@
 package io.sandbox.atlas_zones.zone;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +38,10 @@ import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 
 public class ZoneManager {
+    public static final int DEFAULT_COOLDOWN_TICKS = 20 * 60 * 30; // 30 min
     // Active Zones
     private static Map<UUID, Zone> activeZones = new HashMap<>();
+    private static Map<BlockPos, Long> zonesOnCooldown = new HashMap<>();
     private static Map<UUID, Zone> mobToZoneMap = new HashMap<>();
     private static Map<UUID, UUID> playerToZoneMap = new HashMap<>();
     private static Random random = Random.create();
@@ -46,8 +50,9 @@ public class ZoneManager {
         ZoneManager.activeZones.put(key, lab);
     }
 
-    public static void cleanupZone(UUID zoneId) {
-        ZoneManager.activeZones.remove(zoneId);
+    public static void cleanupZone(World world, UUID zoneId) {
+        Zone zone = ZoneManager.activeZones.remove(zoneId);
+        ZoneManager.zonesOnCooldown.put(zone.blockPos, world.getTime());
     }
 
     public static Map<Integer, Zone> getActiveZonesInWorld(String worldName) {
@@ -77,14 +82,23 @@ public class ZoneManager {
         return ZoneManager.activeZones.get(key);
     }
 
-    public static Zone getZoneAtLocation(DimensionType dimType, BlockPos blockPos) {
+    public static Zone getZoneAtLocation(BlockPos blockPos) {
         for (Zone zone : ZoneManager.activeZones.values()) {
-            if (zone.matchEntryPoint(dimType, blockPos)) {
+            if (zone.matchEntryPoint(blockPos)) {
                 return zone;
             };
         }
 
         return null;
+    }
+
+    public static Long getZoneCooldown(BlockPos blockPos) {
+        Long cooldownTime = zonesOnCooldown.get(blockPos);
+        if (cooldownTime != null) {
+            return cooldownTime;
+        }
+
+        return 0L;
     }
 
     public static Optional<Zone> generateZone(World world, PlayerEntity player, BlockPos blockPos, String zoneName) {
@@ -168,7 +182,6 @@ public class ZoneManager {
                     }
 
                     StructurePoolConfig structurePoolConfig = AtlasZonesConfig.structurePools.get(targetPool);
-                    System.out.println("Structure Pool: " + structurePoolConfig.name);
 
                     // If the pool has elements, continue
                     if (structurePoolConfig != null && structurePoolConfig.elements.length > 0) {
@@ -183,7 +196,6 @@ public class ZoneManager {
 
                             // Initialize the Structure to place for this jigsaw block
                             StructureTemplate pathStructure = optPathStructure.get();
-                            System.out.println("Structure: ");
 
                             // Make this so we can add the processors to continue this process.. (it will
                             // add more items for this while to process, until done)
@@ -231,6 +243,7 @@ public class ZoneManager {
             }
 
             while (StructureBuildQueue.jigsawQueue.peek() != null) {
+                // TODO: this will need to get added to the cleanup list
                 JigsawBlockEntity jigsawBlockEntity = structConfig.nextJigsaw();
                 if (jigsawBlockEntity != null && !jigsawBlockEntity.getPool().getValue().equals(new Identifier("empty"))) {
                     jigsawBlockEntity.generate(serverWorld, 3, false);

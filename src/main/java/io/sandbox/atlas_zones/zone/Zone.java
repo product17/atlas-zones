@@ -23,16 +23,18 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.AbstractPiglinEntity;
 import net.minecraft.entity.mob.HoglinEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PiglinBruteEntity;
 import net.minecraft.entity.mob.PiglinEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -41,12 +43,11 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
-import net.minecraft.world.LocalDifficulty;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 
 public class Zone {
-    private BlockPos blockPos;
+    public BlockPos blockPos;
     private List<Block> breakableBlocks;
     private List<Item> placeableBlocks;
     private StructureBuildQueue buildConfig;
@@ -290,8 +291,9 @@ public class Zone {
         return this.world;
     }
 
-    public Boolean matchEntryPoint(DimensionType dimType, BlockPos blockPos) {
-        return this.generatedFromDimensionType.equals(dimType) && this.blockPos.equals(blockPos);
+    public Boolean matchEntryPoint(BlockPos blockPos) {
+        return this.blockPos.equals(blockPos);
+        // return this.generatedFromDimensionType.equals(dimType) && this.blockPos.equals(blockPos);
     }
 
     private void preventZombification(MobEntity mob) {
@@ -365,6 +367,13 @@ public class Zone {
 
         mob.setPosition(new Vec3d(spawnPos.getX(), spawnPos.getY() + 1, spawnPos.getZ()));
         mob.initialize(world, world.getLocalDifficulty(spawnPos), SpawnReason.TRIGGERED, null, null);
+
+        // TODO: config baby chance later...
+        if (mob.isBaby()) {
+            mob.setBaby(false);
+            mob.equipStack(EquipmentSlot.MAINHAND, (double)this.random.nextFloat() < 0.5D ? new ItemStack(Items.CROSSBOW) : new ItemStack(Items.GOLDEN_SWORD));
+        }
+
         this.preventZombification(mob);
         world.spawnEntity(mob);
         mobDetails.mob = mob;
@@ -395,7 +404,7 @@ public class Zone {
             this.cleanupBlocks();
             Main.LOGGER.info("Cleaning up Zone");
 
-            ZoneManager.cleanupZone(this.id);
+            ZoneManager.cleanupZone(player.getWorld(), this.id);
         }
 
         PreviousPos previousPos = this.previousPlayerPositions.get(player.getUuid());

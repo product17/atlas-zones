@@ -12,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class AtlasRecallBlock extends Block {
+  public static final String name = "atlas_recall_block";
 
   public AtlasRecallBlock(Settings settings) {
     super(settings);

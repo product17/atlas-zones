@@ -1,9 +1,15 @@
 package io.sandbox.atlas_zones.blocks;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import org.jetbrains.annotations.Nullable;
 
+import io.sandbox.atlas_zones.Main;
 import io.sandbox.atlas_zones.block_entities.AtlasDeviceBlockEntity;
 import io.sandbox.atlas_zones.block_entities.BlockEntityLoader;
+import io.sandbox.atlas_zones.zone.Zone;
+import io.sandbox.atlas_zones.zone.ZoneManager;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -16,6 +22,7 @@ import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -52,21 +59,48 @@ public class AtlasDeviceBlock extends BlockWithEntity {
 
   @Override
   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-    // if (hand.equals(Hand.MAIN_HAND)) {
-    //   ItemStack itemStack = player.getMainHandStack();
-    //   if (itemStack.isOf(Items.LAPIS_LAZULI)) {
-    //     AtlasDeviceBlockEntity atlasEntity = (AtlasDeviceBlockEntity)world.getBlockEntity(pos);
-    //     if (atlasEntity.lapisCount < 4) {
-    //       itemStack.setCount(itemStack.getCount() - 1);
-    //       atlasEntity.lapisCount++;
-  
-    //       // We return to prevent the UI from openning
-    //       return ActionResult.SUCCESS; 
-    //     }
-    //   }
-    // }
+    if (hand.equals(Hand.MAIN_HAND)) {
+      // if (hand.equals(Hand.MAIN_HAND)) {
+      //   ItemStack itemStack = player.getMainHandStack();
+      //   if (itemStack.isOf(Items.LAPIS_LAZULI)) {
+      //     AtlasDeviceBlockEntity atlasEntity = (AtlasDeviceBlockEntity)world.getBlockEntity(pos);
+      //     if (atlasEntity.lapisCount < 4) {
+      //       itemStack.setCount(itemStack.getCount() - 1);
+      //       atlasEntity.lapisCount++;
     
-		player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
+      //       // We return to prevent the UI from openning
+      //       return ActionResult.SUCCESS; 
+      //     }
+      //   }
+      // }
+
+      if (!world.isClient) {
+        Long remainingCooldown = ZoneManager.getZoneCooldown(pos);
+        Long cooldown = player.getWorld().getTime() - ZoneManager.getZoneCooldown(pos);
+        if (remainingCooldown > 0 && cooldown < ZoneManager.DEFAULT_COOLDOWN_TICKS) {
+          Long cooldownLeft = (long) Math.ceil((ZoneManager.DEFAULT_COOLDOWN_TICKS - cooldown) / 20);
+          Long minutes = Math.floorDiv(cooldownLeft, 60);
+          Long seconds = cooldownLeft % 60;
+          player.sendMessage(Text.of("Atlas is on cooldown: " + minutes + " : " + seconds));
+        } else {
+          Zone zone = ZoneManager.getZoneAtLocation(pos);
+          if (zone != null) {
+            // If it exists, join
+            ZoneManager.joinZone(zone.getId(), player);
+            Main.LOGGER.info("Added player: " + player.getDisplayName());
+          } else {
+            Optional<Zone> zoneOpt = ZoneManager.generateZone(world, player, pos, "piglin_gate:base_lab");
+            if (zoneOpt.isPresent()) {
+              UUID zoneInstanceId = zoneOpt.get().getId();
+              ZoneManager.joinZone(zoneInstanceId, player);
+              Main.LOGGER.info("Created Zone and added player: " + player.getDisplayName());
+            }
+          }
+        }
+      }
+    }
+    
+		// player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
 		return ActionResult.SUCCESS;
 	}
 

@@ -34,6 +34,7 @@ public class AtlasDeviceGui extends SyncedGuiDescription {
   public Boolean selected = false;
   public List<Selection> selections = new ArrayList<>();
   public Boolean activeZone = false;
+  public Long cooldown = 0L;
   public WGridPanel root;
   public String zoneId;
   public BlockPos blockPos;
@@ -45,10 +46,10 @@ public class AtlasDeviceGui extends SyncedGuiDescription {
     String data = buf.readString();
     CurrentZoneData zoneData = gson.fromJson(data, CurrentZoneData.class);
     this.activeZone = zoneData.active;
+    this.cooldown = zoneData.cooldownLeft;
     this.zoneId = zoneData.zoneName;
     this.blockPos = zoneData.blockPos;
 
-    System.out.println("UI: " + data);
     if (this.activeZone) {
       this.addJoinButton();
     }
@@ -63,14 +64,6 @@ public class AtlasDeviceGui extends SyncedGuiDescription {
 
     // Button clicked listener
     if (!this.world.isClient() && this.world instanceof ServerWorld) {
-      // ScreenNetworking.of(this, NetworkSide.SERVER).receive(this.teleportEventId,
-      // buf -> {
-      // System.out.println("Loading the zone");
-
-      // // Load the zone...
-      // ZoneManager.joinZone(this.zone.getId(), this.playerInventory.player);
-      // });
-
       // return; // return on the server...
     } else {
       ScreenNetworking.of(this, NetworkSide.CLIENT).receive(Main.id(AtlasDeviceGui.clientDataEvent + syncId), buf -> {

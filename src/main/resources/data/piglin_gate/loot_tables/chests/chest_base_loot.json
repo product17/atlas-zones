@@ -1,0 +1,15 @@
+{
+  "pools": [
+    {
+      "rolls": 3,
+      "bonus_rolls": 0.2,
+      "entries": [
+        {
+          "type": "loot_table",
+          "name": "piglin_gate:bases/base_loot",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}
