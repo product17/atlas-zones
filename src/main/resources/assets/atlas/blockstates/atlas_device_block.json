@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "atlas:block/atlas_device_block"
+    }
+  }
+}

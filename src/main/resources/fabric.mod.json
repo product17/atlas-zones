@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "id": "atlas_zones",
+  "id": "atlas",
   "version": "${version}",
 
-  "name": "Atlas Zones",
+  "name": "Sandbox Atlas",
   "description": "This is an example description! Tell everyone what your mod is about!",
   "authors": [
-    "Me!"
+    "Brent Crocker"
   ],
   "contact": {
     "homepage": "https://fabricmc.net/",
@@ -14,19 +14,19 @@
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/atlas_zones/icon.png",
+  "icon": "assets/atlas/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "client": [
-      "io.sandbox.atlas_zones.client.MainClient"
+      "io.sandbox.atlas.client.MainClient"
     ],
     "main": [
-      "io.sandbox.atlas_zones.Main"
+      "io.sandbox.atlas.Main"
     ]
   },
   "mixins": [
-    "atlas_zones.mixins.json"
+    "atlas.mixins.json"
   ],
 
   "depends": {
