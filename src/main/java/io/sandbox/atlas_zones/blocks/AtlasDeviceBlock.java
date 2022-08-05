@@ -3,8 +3,6 @@ package io.sandbox.atlas_zones.blocks;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.jetbrains.annotations.Nullable;
-
 import io.sandbox.atlas_zones.Main;
 import io.sandbox.atlas_zones.block_entities.AtlasDeviceBlockEntity;
 import io.sandbox.atlas_zones.block_entities.BlockEntityLoader;
@@ -20,8 +18,6 @@ import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -34,7 +30,7 @@ import net.minecraft.world.World;
 
 public class AtlasDeviceBlock extends BlockWithEntity {
   public static final String name = "atlas_device_block";
-  protected static final VoxelShape BASE_SHAPE = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0);
+  protected static final VoxelShape BASE_SHAPE = Block.createCuboidShape(5.0, 0.0, 5.0, 6.0, 4.0, 6.0);
   protected static final VoxelShape PORTAL_STONE_SHAPE = Block.createCuboidShape(6.0, 0.0, 6.0, 10.0, 16.0, 10.0);
   protected static final VoxelShape ATLAS_DEVICE_SHAPE = VoxelShapes.union(BASE_SHAPE, PORTAL_STONE_SHAPE);
 
@@ -106,7 +102,7 @@ public class AtlasDeviceBlock extends BlockWithEntity {
 
     @Override
 	public BlockRenderType getRenderType(BlockState state) {
-		return BlockRenderType.MODEL;
+		return BlockRenderType.ENTITYBLOCK_ANIMATED;
 	}
 
   @Override

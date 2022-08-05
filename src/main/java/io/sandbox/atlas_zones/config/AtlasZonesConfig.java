@@ -104,6 +104,7 @@ public class AtlasZonesConfig {
           }
 
           Map<Identifier, Resource> zoneList = manager.findResources("atlas_zone", path -> true);
+          System.out.println("ZoneList: " + zoneList.keySet().toString());
           for (Resource resource : zoneList.values()) {
             String file = getFileString(resource);
             if (file != null) {

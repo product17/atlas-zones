@@ -112,7 +112,7 @@ public class ZoneManager {
         int nextInstanceKey = ZoneManager.getNextInstanceKeyInWorld(zoneConfig.dimentionType);
         
         // nextInstanceKey is used to place the startlocation so zones don't overlap
-        BlockPos startLocation = new BlockPos(0, zoneConfig.worldHeight, nextInstanceKey * 16);
+        BlockPos startLocation = new BlockPos(0, zoneConfig.worldHeight, nextInstanceKey * 64);
         
         
         // TODO: load the block from config

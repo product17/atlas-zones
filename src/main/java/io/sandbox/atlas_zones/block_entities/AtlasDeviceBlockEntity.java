@@ -18,6 +18,7 @@ import io.sandbox.atlas_zones.zone.ZoneManager;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
@@ -30,14 +31,22 @@ import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import software.bernie.geckolib3.core.IAnimatable;
+import software.bernie.geckolib3.core.PlayState;
+import software.bernie.geckolib3.core.builder.AnimationBuilder;
+import software.bernie.geckolib3.core.controller.AnimationController;
+import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
+import software.bernie.geckolib3.core.manager.AnimationData;
+import software.bernie.geckolib3.core.manager.AnimationFactory;
 
-public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceInventory, ExtendedScreenHandlerFactory {
+public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceInventory, ExtendedScreenHandlerFactory, IAnimatable {
   public static final String CONFING_UPDATE_EVENT = "button_selected";
   private ArrayList<String> targetZoneList = new ArrayList<>(); // list of zones that can be selected
   private UUID zoneInstanceId;
   private final String TARGET_ZONE_LIST = "target_zone_list";
   private final DefaultedList<ItemStack> items = DefaultedList.ofSize(4, ItemStack.EMPTY);
   public int lapisCount = 0;
+  public AnimationFactory factory = new AnimationFactory(this);
 
   public AtlasDeviceBlockEntity(BlockPos pos, BlockState state) {
     super(BlockEntityLoader.ATLAS_DEVICE_BLOCK_ENTITY, pos, state);
@@ -52,6 +61,7 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
   }
 
   public static void tick(World world, BlockPos pos, BlockState state, AtlasDeviceBlockEntity be) {
+    
     // if (be.zoneInstanceId != null) {
     //   Zone zone = ZoneManager.getZone(be.zoneInstanceId);
 
@@ -187,5 +197,22 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
 
     // TODO: pull the string from config
     buf.writeString(gson.toJson(zoneData));
+  }
+
+  @Override
+  public void registerControllers(AnimationData animationData) {
+    animationData.addAnimationController(
+      new AnimationController<AtlasDeviceBlockEntity>(this, "controller", 0, this::predicate));
+  }
+
+  private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
+    event.getController().setAnimation(new AnimationBuilder().addAnimation("active", true));
+
+    return PlayState.CONTINUE;
+}
+
+  @Override
+  public AnimationFactory getFactory() {
+    return this.factory;
   }
 }
