@@ -61,10 +61,11 @@ public class StructureBuildQueue {
         }
     }
 
-    public void createNextRoom(Boolean isBossRoom) {
+    public RoomData createNextRoom(Boolean isBossRoom) {
         RoomData room = new RoomData();
         room.isBossRoom = isBossRoom ? true : false;
         this.rooms.add(room);
+        return room;
     }
 
     public RoomData getCurrentRoom() {

@@ -24,7 +24,9 @@ import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.Entity.RemovalReason;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.HoglinEntity;
@@ -36,11 +38,14 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
@@ -174,24 +179,9 @@ public class Zone {
 
             for (Item placeableBlock : this.placeableBlocks) {
                 if (player.getMainHandStack().getItem().equals(placeableBlock)) {
-                    System.out.println("Check: it is this Item");
                     return true;
                 }
             }
-            // Registry.ITEM.get(new Identifier(""));
-            // if (this.breakableBlocks == null) {
-            //     this.breakableBlocks = new ArrayList<>();
-            //     for (String blockName : this.zoneConfig.breakableBlocks) {
-            //         this.breakableBlocks.add(Registry.BLOCK.get(new Identifier(blockName)));
-            //     }
-            // }
-
-            
-
-            // String msg = String.join(", ", this.zoneConfig.breakableBlocks);
-            // Text text = Text.of("Can only Break: " + msg);
-            // player.sendMessage(text, true);
-            // return false;
         }
 
         return false;
@@ -220,6 +210,30 @@ public class Zone {
                     BlockState blockState = Registry.BLOCK.get(new Identifier("air")).getDefaultState();
                     this.world.setBlockState(blockPos, blockState);
                 }
+            }
+        }
+    }
+
+    public void cleanupItems() {
+        for(RoomData room: this.buildConfig.rooms) {
+            // Get center Block  
+            Box roomBoxt = new Box(
+                room.startBlockPos.getX(),
+                room.startBlockPos.getY(),
+                room.startBlockPos.getZ(),
+                room.startBlockPos.getX() + room.size.getX(),
+                room.startBlockPos.getY() + room.size.getY(),
+                room.startBlockPos.getZ() + room.size.getZ()
+            );
+            // roomBoxt.expand(20);
+            List<ItemEntity> boxItems = world.getEntitiesByType(
+                TypeFilter.instanceOf(ItemEntity.class),
+                roomBoxt,
+                EntityPredicates.VALID_ENTITY
+            );
+
+            for(ItemEntity item : boxItems) {
+                item.remove(RemovalReason.DISCARDED);
             }
         }
     }
@@ -397,10 +411,13 @@ public class Zone {
     public void removePlayer(PlayerEntity player) {
         ServerPlayerEntity servPlayer = (ServerPlayerEntity)player;
         Main.LOGGER.info("Removing Player from zone: " + servPlayer.getName());
+        
         this.players.remove(player);
         if (this.getPlayerCount() <= 0) {
             this.cleanupMobs();
             this.cleanupBlocks();
+            this.cleanupItems();
+            
             Main.LOGGER.info("Cleaning up Zone");
 
             ZoneManager.cleanupZone(player.getWorld(), this.id);

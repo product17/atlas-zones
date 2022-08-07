@@ -12,6 +12,7 @@ import io.sandbox.atlas.config.data_types.ZoneConfig;
 import io.sandbox.atlas.processors.CleanupProcessor;
 import io.sandbox.atlas.processors.JigsawProcessor;
 import io.sandbox.atlas.processors.SpawnProcessor;
+import io.sandbox.atlas.zone.data_types.RoomData;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.JigsawBlock;
@@ -138,8 +139,8 @@ public class ZoneManager {
         if (structure.isPresent()) {
             StructureTemplate startStructure = structure.get();
             StructurePlacementData placementData = new StructurePlacementData().setMirror(BlockMirror.NONE);
+            RoomData roomData = structConfig.createNextRoom(false); // add a new room before processing
 
-            structConfig.createNextRoom(false); // add a new room before processing
             // Add the config processors
             placementData.addProcessor(new JigsawProcessor(structConfig));
             placementData.addProcessor(new SpawnProcessor(structConfig));
@@ -147,6 +148,8 @@ public class ZoneManager {
 
             // Place the Start Structure
             startStructure.place(serverWorld, startLocation, null, placementData, (net.minecraft.util.math.random.Random) ZoneManager.random, 0);
+            roomData.startBlockPos = startLocation;
+            roomData.size = startStructure.getSize();
 
             int depth = 0; // preventing an infinite loop... starting at 0
             BlockRotation mainPathRotationAlignment = null;
@@ -190,11 +193,11 @@ public class ZoneManager {
                         Optional<StructureTemplate> optPathStructure = structureManager
                                 .getTemplate(new Identifier(structurePoolConfig.elements[rand].element.location));
                         if (optPathStructure.isPresent()) {
-                            structConfig.createNextRoom(isBossRoom); // add a new room before processing
-
+                            RoomData pathRoomData = structConfig.createNextRoom(isBossRoom); // add a new room before processing
+                            
                             // Initialize the Structure to place for this jigsaw block
                             StructureTemplate pathStructure = optPathStructure.get();
-
+                            
                             // Make this so we can add the processors to continue this process.. (it will
                             // add more items for this while to process, until done)
                             // NOTE: this can cause an infinite loop if there is no max size
@@ -234,6 +237,8 @@ public class ZoneManager {
                                 BlockPos shift = new BlockPos(xDiff, yDiff, zDiff);
                                 BlockPos updatedPos = structBlockPos.add(shift);
                                 pathStructure.place(serverWorld, updatedPos, null, pathPlacementData, ZoneManager.random, 0);
+                                pathRoomData.startBlockPos = updatedPos;
+                                pathRoomData.size = pathStructure.getSize();
                             }
                         }
                     }
