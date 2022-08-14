@@ -4,10 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.UUID;
 
-import io.sandbox.atlas.block_entities.AtlasDeviceBlockEntity;
 import io.sandbox.atlas.config.AtlasZonesConfig;
 import io.sandbox.atlas.config.data_types.StructurePoolConfig;
 import io.sandbox.atlas.config.data_types.ZoneConfig;
@@ -16,11 +14,8 @@ import io.sandbox.atlas.processors.JigsawProcessor;
 import io.sandbox.atlas.processors.SpawnProcessor;
 import io.sandbox.atlas.zone.data_types.RoomData;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.JigsawBlock;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.JigsawBlockEntity;
-import net.minecraft.client.report.ReporterEnvironment.Server;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructurePlacementData;
@@ -35,7 +30,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Direction.Axis;
 import net.minecraft.util.math.random.Random;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 
@@ -154,21 +148,6 @@ public class ZoneManager {
 
             structConfig.currentDepth = 0; // preventing an infinite loop... starting at 0
             structConfig.mainPathRotationAlignment = null;
-
-            // AtlasDeviceBlockEntity atlasDeviceBlockEntity = (AtlasDeviceBlockEntity)serverWorld.getBlockEntity(blockPos);
-            // if (atlasDeviceBlockEntity != null) {
-            //     // trigger build process for the tick() method
-            //     atlasDeviceBlockEntity.zoneInstanceId = zone.getId();
-            //     atlasDeviceBlockEntity.buildingZone = true;
-            // }
-            
-            // while (structConfig.mainPathQueue.peek() != null) {
-            //     ZoneManager.addNextMainStructure(zone);
-            // }
-
-            // while (structConfig.jigsawQueue.peek() != null) {
-            //     ZoneManager.addNextJigsawStructure(zone);
-            // }
         }
         return Optional.of(zone);
     }
