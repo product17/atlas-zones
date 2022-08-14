@@ -4,8 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.UUID;
 
+import io.sandbox.atlas.block_entities.AtlasDeviceBlockEntity;
 import io.sandbox.atlas.config.AtlasZonesConfig;
 import io.sandbox.atlas.config.data_types.StructurePoolConfig;
 import io.sandbox.atlas.config.data_types.ZoneConfig;
@@ -16,7 +18,9 @@ import io.sandbox.atlas.zone.data_types.RoomData;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.JigsawBlock;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.JigsawBlockEntity;
+import net.minecraft.client.report.ReporterEnvironment.Server;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructurePlacementData;
@@ -34,7 +38,6 @@ import net.minecraft.util.math.random.Random;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 
 public class ZoneManager {
     public static final int DEFAULT_COOLDOWN_TICKS = 20 * 60 * 30; // 30 min
@@ -44,6 +47,7 @@ public class ZoneManager {
     private static Map<UUID, Zone> mobToZoneMap = new HashMap<>();
     private static Map<UUID, UUID> playerToZoneMap = new HashMap<>();
     private static Random random = Random.create();
+    private static Map<PlayerEntity, UUID> joinQueue = new HashMap<>();
     
     public static void addZone(UUID key, Zone lab) {
         ZoneManager.activeZones.put(key, lab);
@@ -113,14 +117,11 @@ public class ZoneManager {
         // nextInstanceKey is used to place the startlocation so zones don't overlap
         BlockPos startLocation = new BlockPos(0, zoneConfig.worldHeight, nextInstanceKey * 64);
         
-        
-        // TODO: load the block from config
-        StructureBuildQueue structConfig = new StructureBuildQueue(Registry.BLOCK.getId(Blocks.TARGET).toString());
-        // TODO: load maxdepth from config
-        structConfig.setMaxDepth(5);
+        StructureBuildQueue structConfig = new StructureBuildQueue(zoneConfig.spawnBlock);
+        structConfig.setMaxDepth(zoneConfig.maxDepth);
 
-        DimensionType openedInDimension = player.getWorld().getDimension();
-        Zone zone = new Zone(zoneConfig, openedInDimension, blockPos, nextInstanceKey, 1);
+        // DimensionType openedInDimension = player.getWorld().getDimension();
+        Zone zone = new Zone(zoneConfig, blockPos, nextInstanceKey, 1);
         zone.addBuildConfig(structConfig);
         ZoneManager.activeZones.put(zone.getId(), zone);
         // set start pos by checking existing in the biome
@@ -151,109 +152,128 @@ public class ZoneManager {
             roomData.startBlockPos = startLocation;
             roomData.size = startStructure.getSize();
 
-            int depth = 0; // preventing an infinite loop... starting at 0
-            BlockRotation mainPathRotationAlignment = null;
+            structConfig.currentDepth = 0; // preventing an infinite loop... starting at 0
+            structConfig.mainPathRotationAlignment = null;
+
+            // AtlasDeviceBlockEntity atlasDeviceBlockEntity = (AtlasDeviceBlockEntity)serverWorld.getBlockEntity(blockPos);
+            // if (atlasDeviceBlockEntity != null) {
+            //     // trigger build process for the tick() method
+            //     atlasDeviceBlockEntity.zoneInstanceId = zone.getId();
+            //     atlasDeviceBlockEntity.buildingZone = true;
+            // }
             
-            while (StructureBuildQueue.mainPathQueue.peek() != null) {
-                StructureBlockInfo structureBlockInfo = structConfig.next();
-                depth++;
+            // while (structConfig.mainPathQueue.peek() != null) {
+            //     ZoneManager.addNextMainStructure(zone);
+            // }
 
-                if (depth > structConfig.maxDepth) {
-                    break;
-                }
+            // while (structConfig.jigsawQueue.peek() != null) {
+            //     ZoneManager.addNextJigsawStructure(zone);
+            // }
+        }
+        return Optional.of(zone);
+    }
 
-                if (structureBlockInfo != null) {
+    public static void addNextJigsawStructure(Zone zone) {
+        // TODO: this will need to get added to the cleanup list
+        StructureBuildQueue structConfig = zone.getBuildConfig();
+        JigsawBlockEntity jigsawBlockEntity = structConfig.nextJigsaw();
+        if (jigsawBlockEntity != null && !jigsawBlockEntity.getPool().getValue().equals(new Identifier("empty"))) {
+            jigsawBlockEntity.generate(zone.getWorld(), 3, false);
+        }
+    }
 
-                    // Block info of the jigsaw block we are building from
-                    BlockState blockState = structureBlockInfo.state;
-                    // Use last rotation to align this block
-                    if (mainPathRotationAlignment != null) {
-                        blockState = blockState.rotate(mainPathRotationAlignment);
-                    }
+    public static void addNextMainStructure(Zone zone) {
+        StructureBuildQueue structConfig = zone.getBuildConfig();
+        StructureBlockInfo structureBlockInfo = structConfig.next();
+        structConfig.currentDepth++;
 
-                    Direction jigsawDirection = JigsawBlock.getFacing(blockState);
-                    JigsawBlock pathJigsawBlock = (JigsawBlock) blockState.getBlock();
+        if (structConfig.currentDepth > structConfig.maxDepth) {
+            return;
+        }
 
-                    // Get the target pool info
-                    String targetPool = structureBlockInfo.nbt.getString(JigsawBlockEntity.POOL_KEY);
-                    Boolean isBossRoom = depth == structConfig.maxDepth;
-                    if (isBossRoom) {
-                        // if it's the last room, load the boss room
-                        targetPool = zoneConfig.roomPools.bossRoom;
-                    }
+        if (structureBlockInfo != null) {
 
-                    StructurePoolConfig structurePoolConfig = AtlasZonesConfig.structurePools.get(targetPool);
-
-                    // If the pool has elements, continue
-                    if (structurePoolConfig != null && structurePoolConfig.elements.length > 0) {
-                        // TODO: grab weighted random element
-                        // Also add a level element? or some kind of tiering system
-                        int len = structurePoolConfig.elements.length;
-                        int rand = random.nextInt(len);
-                        Optional<StructureTemplate> optPathStructure = structureManager
-                                .getTemplate(new Identifier(structurePoolConfig.elements[rand].element.location));
-                        if (optPathStructure.isPresent()) {
-                            RoomData pathRoomData = structConfig.createNextRoom(isBossRoom); // add a new room before processing
-                            
-                            // Initialize the Structure to place for this jigsaw block
-                            StructureTemplate pathStructure = optPathStructure.get();
-                            
-                            // Make this so we can add the processors to continue this process.. (it will
-                            // add more items for this while to process, until done)
-                            // NOTE: this can cause an infinite loop if there is no max size
-                            StructurePlacementData pathPlacementData = new StructurePlacementData()
-                                .setMirror(BlockMirror.NONE);
-                            pathPlacementData.addProcessor(new JigsawProcessor(structConfig));
-                            pathPlacementData.addProcessor(new SpawnProcessor(structConfig));
-                            pathPlacementData.addProcessor(new CleanupProcessor(structConfig));
-
-                            // Get the target Jigsaw blocks in the chosen structure
-                            List<StructureBlockInfo> structBlocks = pathStructure
-                                    .getInfosForBlock(structureBlockInfo.pos, pathPlacementData, pathJigsawBlock);
-                            StructureBlockInfo mainPath = ZoneManager.getConnectionJigsawBlock(structBlocks);
-
-                            // If item has a main path
-                            // If not... maybe we should log an error? with the name of the structure that
-                            // doesn't have a main_path
-                            if (mainPath != null) {
-                                // Align the rotation
-                                Direction mainPathDirection = JigsawBlock.getFacing(mainPath.state);
-                                mainPathRotationAlignment = ZoneManager.getRotationAmount(jigsawDirection, mainPathDirection);
-                                pathPlacementData.setRotation(mainPathRotationAlignment);
-
-                                // Get the mainPath again with corrected direction
-                                structBlocks = pathStructure.getInfosForBlock(structureBlockInfo.pos, pathPlacementData,
-                                        pathJigsawBlock);
-                                mainPath = ZoneManager.getConnectionJigsawBlock(structBlocks);
-
-                                // Shift the pos for the maths
-                                BlockPos structBlockPos = structureBlockInfo.pos.offset(jigsawDirection);
-                                BlockPos mainPathBlockPos = mainPath.pos.offset(jigsawDirection);
-
-                                // Adjust position of structure to align jigsaw blocks
-                                int xDiff = structBlockPos.getX() - mainPathBlockPos.getX();
-                                int yDiff = structBlockPos.getY() - mainPathBlockPos.getY();
-                                int zDiff = structBlockPos.getZ() - mainPathBlockPos.getZ();
-                                BlockPos shift = new BlockPos(xDiff, yDiff, zDiff);
-                                BlockPos updatedPos = structBlockPos.add(shift);
-                                pathStructure.place(serverWorld, updatedPos, null, pathPlacementData, ZoneManager.random, 0);
-                                pathRoomData.startBlockPos = updatedPos;
-                                pathRoomData.size = pathStructure.getSize();
-                            }
-                        }
-                    }
-                }
+            // Block info of the jigsaw block we are building from
+            BlockState blockState = structureBlockInfo.state;
+            // Use last rotation to align this block
+            if (structConfig.mainPathRotationAlignment != null) {
+                blockState = blockState.rotate(structConfig.mainPathRotationAlignment);
             }
 
-            while (StructureBuildQueue.jigsawQueue.peek() != null) {
-                // TODO: this will need to get added to the cleanup list
-                JigsawBlockEntity jigsawBlockEntity = structConfig.nextJigsaw();
-                if (jigsawBlockEntity != null && !jigsawBlockEntity.getPool().getValue().equals(new Identifier("empty"))) {
-                    jigsawBlockEntity.generate(serverWorld, 3, false);
+            Direction jigsawDirection = JigsawBlock.getFacing(blockState);
+            JigsawBlock pathJigsawBlock = (JigsawBlock) blockState.getBlock();
+
+            // Get the target pool info
+            String targetPool = structureBlockInfo.nbt.getString(JigsawBlockEntity.POOL_KEY);
+            Boolean isBossRoom = structConfig.currentDepth == structConfig.maxDepth;
+            if (isBossRoom) {
+                // if it's the last room, load the boss room
+                targetPool = zone.getZoneConfig().roomPools.bossRoom;
+            }
+
+            StructurePoolConfig structurePoolConfig = AtlasZonesConfig.structurePools.get(targetPool);
+
+            // If the pool has elements, continue
+            if (structurePoolConfig != null && structurePoolConfig.elements.length > 0) {
+                ServerWorld serverWorld = zone.getWorld();
+                StructureTemplateManager structureManager = serverWorld.getStructureTemplateManager();
+                // TODO: grab weighted random element
+                // Also add a level element? or some kind of tiering system
+                int len = structurePoolConfig.elements.length;
+                int rand = random.nextInt(len);
+                Optional<StructureTemplate> optPathStructure = structureManager
+                        .getTemplate(new Identifier(structurePoolConfig.elements[rand].element.location));
+                if (optPathStructure.isPresent()) {
+                    RoomData pathRoomData = structConfig.createNextRoom(isBossRoom); // add a new room before processing
+                    
+                    // Initialize the Structure to place for this jigsaw block
+                    StructureTemplate pathStructure = optPathStructure.get();
+                    
+                    // Make this so we can add the processors to continue this process.. (it will
+                    // add more items for this while to process, until done)
+                    // NOTE: this can cause an infinite loop if there is no max size
+                    StructurePlacementData pathPlacementData = new StructurePlacementData()
+                        .setMirror(BlockMirror.NONE);
+                    pathPlacementData.addProcessor(new JigsawProcessor(structConfig));
+                    pathPlacementData.addProcessor(new SpawnProcessor(structConfig));
+                    pathPlacementData.addProcessor(new CleanupProcessor(structConfig));
+
+                    // Get the target Jigsaw blocks in the chosen structure
+                    List<StructureBlockInfo> structBlocks = pathStructure
+                            .getInfosForBlock(structureBlockInfo.pos, pathPlacementData, pathJigsawBlock);
+                    StructureBlockInfo mainPath = ZoneManager.getConnectionJigsawBlock(structBlocks);
+
+                    // If item has a main path
+                    // If not... maybe we should log an error? with the name of the structure that
+                    // doesn't have a main_path
+                    if (mainPath != null) {
+                        // Align the rotation
+                        Direction mainPathDirection = JigsawBlock.getFacing(mainPath.state);
+                        structConfig.mainPathRotationAlignment = ZoneManager.getRotationAmount(jigsawDirection, mainPathDirection);
+                        pathPlacementData.setRotation(structConfig.mainPathRotationAlignment);
+
+                        // Get the mainPath again with corrected direction
+                        structBlocks = pathStructure.getInfosForBlock(structureBlockInfo.pos, pathPlacementData,
+                                pathJigsawBlock);
+                        mainPath = ZoneManager.getConnectionJigsawBlock(structBlocks);
+
+                        // Shift the pos for the maths
+                        BlockPos structBlockPos = structureBlockInfo.pos.offset(jigsawDirection);
+                        BlockPos mainPathBlockPos = mainPath.pos.offset(jigsawDirection);
+
+                        // Adjust position of structure to align jigsaw blocks
+                        int xDiff = structBlockPos.getX() - mainPathBlockPos.getX();
+                        int yDiff = structBlockPos.getY() - mainPathBlockPos.getY();
+                        int zDiff = structBlockPos.getZ() - mainPathBlockPos.getZ();
+                        BlockPos shift = new BlockPos(xDiff, yDiff, zDiff);
+                        BlockPos updatedPos = structBlockPos.add(shift);
+                        pathStructure.place(serverWorld, updatedPos, null, pathPlacementData, ZoneManager.random, 0);
+                        pathRoomData.startBlockPos = updatedPos;
+                        pathRoomData.size = pathStructure.getSize();
+                    }
                 }
             }
         }
-        return Optional.of(zone);
     }
 
     public static StructureBlockInfo getConnectionJigsawBlock(List<StructureBlockInfo> structBlocks) {
@@ -319,18 +339,25 @@ public class ZoneManager {
         return ZoneManager.activeZones.get(zoneId);
     }
 
-    public static void joinZone(UUID zoneName, PlayerEntity player) {
+    public static Boolean joinZone(UUID zoneUuid, PlayerEntity player) {
         // add the player to the specific lab when the teleport there
-        Zone activeZone = ZoneManager.activeZones.get(zoneName);
+        Zone activeZone = ZoneManager.activeZones.get(zoneUuid);
         if (activeZone != null) {
-            Boolean successfullyAdded = activeZone.addPlayer(player);
-            if (successfullyAdded) {
-                ZoneManager.playerToZoneMap.put(player.getUuid(), zoneName);
+            if (activeZone.getProcessingStructures()) {
+                ZoneManager.joinQueue.put(player, zoneUuid);
+            } else {
+                Boolean successfullyAdded = activeZone.addPlayer(player);
+                if (successfullyAdded) {
+                    ZoneManager.playerToZoneMap.put(player.getUuid(), zoneUuid);
+                    return true;
+                }
             }
         } else {
             // Send message: Cannot join right now
             player.sendMessage(Text.of("Unable to join zone"), true);
         }
+
+        return false;
     }
 
     public static void leaveZone(PlayerEntity player) {
@@ -343,6 +370,15 @@ public class ZoneManager {
             }
 
             ZoneManager.playerToZoneMap.remove(player.getUuid());
+        }
+    }
+
+    public static void processJoinQueue() {
+        for (PlayerEntity player : ZoneManager.joinQueue.keySet()) {
+            // If it's not ready it will just add them back to the queue.
+            // If two are loading at once, the one that is not done
+            // should place players back in queue.
+            ZoneManager.joinZone(ZoneManager.joinQueue.get(player), player);
         }
     }
 }

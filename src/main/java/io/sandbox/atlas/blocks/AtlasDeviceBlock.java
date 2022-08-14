@@ -88,6 +88,10 @@ public class AtlasDeviceBlock extends BlockWithEntity {
             Optional<Zone> zoneOpt = ZoneManager.generateZone(world, player, pos, "piglin_gate:base_lab");
             if (zoneOpt.isPresent()) {
               UUID zoneInstanceId = zoneOpt.get().getId();
+              AtlasDeviceBlockEntity atlasEntity = (AtlasDeviceBlockEntity)world.getBlockEntity(pos);
+              atlasEntity.zoneInstanceId = zoneInstanceId;
+              atlasEntity.buildingZone = true;
+
               ZoneManager.joinZone(zoneInstanceId, player);
               Main.LOGGER.info("Created Zone and added player: " + player.getDisplayName());
             }

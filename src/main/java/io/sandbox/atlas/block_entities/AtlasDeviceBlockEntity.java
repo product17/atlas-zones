@@ -39,13 +39,16 @@ import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceInventory, ExtendedScreenHandlerFactory, IAnimatable {
+  private static final String BUILDING_ZONE_FIELD = "building_zone";
+  private static final String ZONE_INSTANCE_ID_KEY = "zone_instance_id";
   public static final String CONFING_UPDATE_EVENT = "button_selected";
   private ArrayList<String> targetZoneList = new ArrayList<>(); // list of zones that can be selected
-  private UUID zoneInstanceId;
+  public UUID zoneInstanceId;
   private final String TARGET_ZONE_LIST = "target_zone_list";
   private final DefaultedList<ItemStack> items = DefaultedList.ofSize(4, ItemStack.EMPTY);
   public int lapisCount = 0;
   public AnimationFactory factory = new AnimationFactory(this);
+  public Boolean buildingZone = false;
 
   public AtlasDeviceBlockEntity(BlockPos pos, BlockState state) {
     super(BlockEntityLoader.ATLAS_DEVICE_BLOCK_ENTITY, pos, state);
@@ -59,22 +62,19 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
     return player.isSneaking() && player.isCreative();
   }
 
-  public static void tick(World world, BlockPos pos, BlockState state, AtlasDeviceBlockEntity be) {
-    
-    // if (be.zoneInstanceId != null) {
-    //   Zone zone = ZoneManager.getZone(be.zoneInstanceId);
-
-    //   if (zone == null) {
-    //     // make sure to set zoneInstanceId to null to prevent this from looping
-    //     be.zoneInstanceId = null;
-    //     return;
-    //   }
-
-    //   if (zone.getPlayerCount() == 0) {
-    //     // Once the zone hits the max ticks it will remove itself
-    //     zone.incrementEmptyTicks();
-    //   }
-    // }
+  public static void tick(World world, BlockPos pos, BlockState state, AtlasDeviceBlockEntity atlasDeviceEntity) {
+    if (!world.isClient && atlasDeviceEntity.buildingZone) {
+      Zone zone = ZoneManager.getZone(atlasDeviceEntity.zoneInstanceId);
+      if (zone.hasNextMainStructure()) {
+        ZoneManager.addNextMainStructure(zone);
+      } else if (zone.hasNextJigsawStructure()) {
+        ZoneManager.addNextJigsawStructure(zone);
+      } else {
+        atlasDeviceEntity.buildingZone = false;
+        zone.setProcessingStructures(atlasDeviceEntity.buildingZone);
+        ZoneManager.processJoinQueue();
+      }
+    }
   }
 
   @Override
@@ -91,6 +91,13 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
   public void readNbt(NbtCompound nbt) {
     super.readNbt(nbt);
     Inventories.readNbt(nbt, items);
+    this.buildingZone = nbt.getBoolean(BUILDING_ZONE_FIELD);
+
+    UUID zoneId = nbt.getUuid(ZONE_INSTANCE_ID_KEY);
+    if (zoneId != null) {
+      this.zoneInstanceId = zoneId;
+    }
+
     String target = nbt.getString(TARGET_ZONE_LIST);
     this.targetZoneList = new ArrayList<>();
     if (target != null) {
@@ -106,6 +113,10 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
   @Override
   public void writeNbt(NbtCompound nbt) {
     Inventories.writeNbt(nbt, items);
+    nbt.putBoolean(BUILDING_ZONE_FIELD, this.buildingZone);
+    if (this.zoneInstanceId != null) {
+      nbt.putUuid(ZONE_INSTANCE_ID_KEY, this.zoneInstanceId);
+    }
     if (this.targetZoneList.size() > 0) {
       nbt.putString(TARGET_ZONE_LIST, StringUtils.join(this.targetZoneList, ","));
     } else {

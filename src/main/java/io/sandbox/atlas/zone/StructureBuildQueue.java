@@ -10,17 +10,17 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.JigsawBlockEntity;
 import net.minecraft.structure.StructureTemplate.StructureBlockInfo;
+import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 
 public class StructureBuildQueue {
-    public static LinkedList<StructureBlockInfo> mainPathQueue = new LinkedList<>();
-    public static LinkedList<JigsawBlockEntity> jigsawQueue = new LinkedList<>();
-    
+    public LinkedList<StructureBlockInfo> mainPathQueue = new LinkedList<>();
+    public LinkedList<JigsawBlockEntity> jigsawQueue = new LinkedList<>();
+    public BlockRotation mainPathRotationAlignment;
     public List<BlockPos> blockList = new ArrayList<BlockPos>(); // List of all blocks generated to be removed on zone close
     public Integer currentDepth = 0; // used while building to track depth
-    public Integer level; // config for difficulty
     public Integer maxDepth = 3; // How many chains down the main path in the jigsaw
     public Block playerSpawnBlockType;
     public List<RoomData> rooms = new ArrayList<>();
@@ -40,11 +40,11 @@ public class StructureBuildQueue {
     }
 
     public void addJigsawBlockEntity(JigsawBlockEntity entity) {
-        StructureBuildQueue.jigsawQueue.add(entity);
+        this.jigsawQueue.add(entity);
     }
 
     public void addMainPathEntity(StructureBlockInfo mainPathEntity) {
-        StructureBuildQueue.mainPathQueue.add(mainPathEntity);
+        this.mainPathQueue.add(mainPathEntity);
     }
 
     public void addChestToCurrentRoom(BlockPos pos) {
@@ -78,16 +78,16 @@ public class StructureBuildQueue {
     }
 
     public StructureBlockInfo next() {
-        if (StructureBuildQueue.mainPathQueue.size() > 0) {
-            return StructureBuildQueue.mainPathQueue.removeFirst();
+        if (this.mainPathQueue.size() > 0) {
+            return this.mainPathQueue.removeFirst();
         }
 
         return null;
     }
 
     public JigsawBlockEntity nextJigsaw() {
-        if (StructureBuildQueue.jigsawQueue.size() > 0) {
-            return StructureBuildQueue.jigsawQueue.removeFirst();
+        if (this.jigsawQueue.size() > 0) {
+            return this.jigsawQueue.removeFirst();
         }
 
         return null;

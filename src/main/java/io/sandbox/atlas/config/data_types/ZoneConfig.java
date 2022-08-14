@@ -5,6 +5,7 @@ import java.util.List;
 
 public class ZoneConfig {
   public Boolean elytraAllowed = false;
+  public Integer maxDepth = 5;
   public List<String> breakableBlocks = new ArrayList<>();
   public List<String> placeableBlocks = new ArrayList<>();
   public List<LootTier> chestLootTables = new ArrayList<>();
@@ -16,6 +17,7 @@ public class ZoneConfig {
   public RoomPoolConfig roomPools;
   public Integer worldHeight = 64;
   public String dimentionType;
+  public String spawnBlock = "minecraft:target";
 
   public static String getLootTableAtLevel(int level, List<LootTier> lootTableList) {
     for (LootTier lootTier : lootTableList) {

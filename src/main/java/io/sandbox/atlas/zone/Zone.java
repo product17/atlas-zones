@@ -49,7 +49,6 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 
 public class Zone {
     public BlockPos blockPos;
@@ -66,12 +65,13 @@ public class Zone {
     private Map<UUID, Room> mobToRoomMap = new HashMap<>();
     private List<PlayerEntity> players = new ArrayList<>();
     private HashMap<UUID, PreviousPos> previousPlayerPositions = new HashMap<>();
+    private Boolean processingStructures = true;
     private Random random = new Random();
     private List<Room> rooms = new ArrayList<>();
     private ServerWorld world;
     private ZoneConfig zoneConfig;
     
-    public Zone(ZoneConfig zoneConfig, DimensionType generatedFromDimensionType, BlockPos blockPos, int instanceKey, int difficulty) {
+    public Zone(ZoneConfig zoneConfig, BlockPos blockPos, int instanceKey, int difficulty) {
         // Loot tables?
         this.blockPos = blockPos;
         this.dimentionType = zoneConfig.dimentionType;
@@ -299,13 +299,28 @@ public class Zone {
         return players.size();
     }
 
+    public Boolean getProcessingStructures() {
+        return this.processingStructures;
+    }
+
     public ServerWorld getWorld() {
         return this.world;
     }
 
+    public ZoneConfig getZoneConfig() {
+        return this.zoneConfig;
+    }
+
+    public Boolean hasNextMainStructure() {
+        return this.buildConfig.mainPathQueue.peek() != null;
+    }
+
+    public Boolean hasNextJigsawStructure() {
+        return this.buildConfig.jigsawQueue.peek() != null;
+    }
+
     public Boolean matchEntryPoint(BlockPos blockPos) {
         return this.blockPos.equals(blockPos);
-        // return this.generatedFromDimensionType.equals(dimType) && this.blockPos.equals(blockPos);
     }
 
     private void preventZombification(MobEntity mob) {
@@ -444,6 +459,10 @@ public class Zone {
 
     public void incrementEmptyTicks() {
         this.emptyTicks++;
+    }
+
+    public void setProcessingStructures(Boolean processing) {
+        this.processingStructures = processing;
     }
 
     public void setWorld(ServerWorld world) {
