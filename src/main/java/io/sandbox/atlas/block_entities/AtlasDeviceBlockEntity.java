@@ -40,7 +40,6 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceInventory, ExtendedScreenHandlerFactory, IAnimatable {
   private static final String BUILDING_ZONE_FIELD = "building_zone";
-  private static final String ZONE_INSTANCE_ID_KEY = "zone_instance_id";
   public static final String CONFING_UPDATE_EVENT = "button_selected";
   private ArrayList<String> targetZoneList = new ArrayList<>(); // list of zones that can be selected
   public UUID zoneInstanceId;
