@@ -92,12 +92,6 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
     super.readNbt(nbt);
     Inventories.readNbt(nbt, items);
     this.buildingZone = nbt.getBoolean(BUILDING_ZONE_FIELD);
-
-    UUID zoneId = nbt.getUuid(ZONE_INSTANCE_ID_KEY);
-    if (zoneId != null) {
-      this.zoneInstanceId = zoneId;
-    }
-
     String target = nbt.getString(TARGET_ZONE_LIST);
     this.targetZoneList = new ArrayList<>();
     if (target != null) {
@@ -114,9 +108,6 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
   public void writeNbt(NbtCompound nbt) {
     Inventories.writeNbt(nbt, items);
     nbt.putBoolean(BUILDING_ZONE_FIELD, this.buildingZone);
-    if (this.zoneInstanceId != null) {
-      nbt.putUuid(ZONE_INSTANCE_ID_KEY, this.zoneInstanceId);
-    }
     if (this.targetZoneList.size() > 0) {
       nbt.putString(TARGET_ZONE_LIST, StringUtils.join(this.targetZoneList, ","));
     } else {
