@@ -71,36 +71,40 @@ public class AtlasDeviceBlock extends BlockWithEntity {
       // }
 
       if (!world.isClient) {
-        Long remainingCooldown = ZoneManager.getZoneCooldown(pos);
-        Long cooldown = player.getWorld().getTime() - ZoneManager.getZoneCooldown(pos);
-        if (remainingCooldown > 0 && cooldown < ZoneManager.DEFAULT_COOLDOWN_TICKS) {
-          Long cooldownLeft = (long) Math.ceil((ZoneManager.DEFAULT_COOLDOWN_TICKS - cooldown) / 20);
-          Long minutes = Math.floorDiv(cooldownLeft, 60);
-          Long seconds = cooldownLeft % 60;
-          player.sendMessage(Text.of("Atlas is on cooldown: " + minutes + " : " + seconds));
+        if (AtlasDeviceBlockEntity.isConfigMenu(player)) {
+          // Currently opens the Config menu for Sneaking Creative mode
+          player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
         } else {
-          Zone zone = ZoneManager.getZoneAtLocation(pos);
-          if (zone != null) {
-            // If it exists, join
-            ZoneManager.joinZone(zone.getId(), player);
-            Main.LOGGER.info("Added player: " + player.getDisplayName());
+          Long remainingCooldown = ZoneManager.getZoneCooldown(pos);
+          Long cooldown = player.getWorld().getTime() - ZoneManager.getZoneCooldown(pos);
+          if (remainingCooldown > 0 && cooldown < ZoneManager.DEFAULT_COOLDOWN_TICKS) {
+            Long cooldownLeft = (long) Math.ceil((ZoneManager.DEFAULT_COOLDOWN_TICKS - cooldown) / 20);
+            Long minutes = Math.floorDiv(cooldownLeft, 60);
+            Long seconds = cooldownLeft % 60;
+            player.sendMessage(Text.of("Atlas is on cooldown: " + minutes + " : " + seconds));
           } else {
-            Optional<Zone> zoneOpt = ZoneManager.generateZone(world, player, pos, "piglin_gate:base_lab");
-            if (zoneOpt.isPresent()) {
-              UUID zoneInstanceId = zoneOpt.get().getId();
-              AtlasDeviceBlockEntity atlasEntity = (AtlasDeviceBlockEntity)world.getBlockEntity(pos);
-              atlasEntity.zoneInstanceId = zoneInstanceId;
-              atlasEntity.buildingZone = true;
-
-              ZoneManager.joinZone(zoneInstanceId, player);
-              Main.LOGGER.info("Created Zone and added player: " + player.getDisplayName());
+            Zone zone = ZoneManager.getZoneAtLocation(pos);
+            if (zone != null) {
+              // If it exists, join
+              ZoneManager.joinZone(zone.getId(), player);
+              Main.LOGGER.info("Added player: " + player.getDisplayName());
+            } else {
+              Optional<Zone> zoneOpt = ZoneManager.generateZone(world, player, pos, "piglin_gate:base_lab");
+              if (zoneOpt.isPresent()) {
+                UUID zoneInstanceId = zoneOpt.get().getId();
+                AtlasDeviceBlockEntity atlasEntity = (AtlasDeviceBlockEntity)world.getBlockEntity(pos);
+                atlasEntity.zoneInstanceId = zoneInstanceId;
+                atlasEntity.buildingZone = true;
+  
+                ZoneManager.joinZone(zoneInstanceId, player);
+                Main.LOGGER.info("Created Zone and added player: " + player.getDisplayName());
+              }
             }
           }
         }
       }
     }
-    
-		// player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
+
 		return ActionResult.SUCCESS;
 	}
 

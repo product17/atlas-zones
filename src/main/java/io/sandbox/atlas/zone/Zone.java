@@ -16,17 +16,17 @@ import io.sandbox.atlas.zone.data_types.MobDetails;
 import io.sandbox.atlas.zone.data_types.PreviousPos;
 import io.sandbox.atlas.zone.data_types.Room;
 import io.sandbox.atlas.zone.data_types.RoomData;
+import net.fabricmc.fabric.api.dimension.v1.FabricDimensions;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.Entity.RemovalReason;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.Entity.RemovalReason;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.HoglinEntity;
@@ -48,6 +48,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.TeleportTarget;
 import net.minecraft.world.World;
 
 public class Zone {
@@ -70,7 +71,7 @@ public class Zone {
     private List<Room> rooms = new ArrayList<>();
     private ServerWorld world;
     private ZoneConfig zoneConfig;
-    
+
     public Zone(ZoneConfig zoneConfig, BlockPos blockPos, int instanceKey, int difficulty) {
         // Loot tables?
         this.blockPos = blockPos;
@@ -91,15 +92,13 @@ public class Zone {
 
         if (this.world != null) {
             this.players.add(player);
-            ServerPlayerEntity servPlayer = (ServerPlayerEntity)player;
+            ServerPlayerEntity servPlayer = (ServerPlayerEntity) player;
 
             this.previousPlayerPositions.put(
-                servPlayer.getUuid(),
-                new PreviousPos(
-                    servPlayer.getBlockPos(),
-                    servPlayer.getWorld().getRegistryKey()
-                )
-            );
+                    servPlayer.getUuid(),
+                    new PreviousPos(
+                            servPlayer.getBlockPos(),
+                            servPlayer.getWorld().getRegistryKey()));
 
             this.teleportToZoneEntrance(servPlayer);
 
@@ -111,9 +110,11 @@ public class Zone {
                     for (BlockPos chestPos : roomData.chestPositions) {
                         Optional<ChestBlockEntity> chestOpt = world.getBlockEntity(chestPos, BlockEntityType.CHEST);
                         if (chestOpt.isPresent()) {
-                            String chestLootTable = ZoneConfig.getLootTableAtLevel(this.difficulty, zoneConfig.defaultLootTables);
+                            String chestLootTable = ZoneConfig.getLootTableAtLevel(this.difficulty,
+                                    zoneConfig.defaultLootTables);
                             if (zoneConfig.chestLootTables != null) {
-                                String hasChestLootTable = ZoneConfig.getLootTableAtLevel(this.difficulty, zoneConfig.chestLootTables);
+                                String hasChestLootTable = ZoneConfig.getLootTableAtLevel(this.difficulty,
+                                        zoneConfig.chestLootTables);
                                 if (hasChestLootTable != null) {
                                     chestLootTable = hasChestLootTable;
                                 }
@@ -198,15 +199,6 @@ public class Zone {
                 // this.world.getblock
                 BlockState existingBlock = this.world.getBlockState(blockPos);
                 if (existingBlock != null) {
-                    if (existingBlock.isOf(Blocks.CHEST)) {
-                        Optional<ChestBlockEntity> chest = this.world.getBlockEntity(blockPos, BlockEntityType.CHEST);
-                        if (chest.isPresent()) {
-                            // ChestBlockEntity chestEntity = chest.get();
-                            // chestEntity.
-                            // TODO: figure out later to cleanup better
-                        }
-                    }
-
                     BlockState blockState = Registry.BLOCK.get(new Identifier("air")).getDefaultState();
                     this.world.setBlockState(blockPos, blockState);
                 }
@@ -215,24 +207,22 @@ public class Zone {
     }
 
     public void cleanupItems() {
-        for(RoomData room: this.buildConfig.rooms) {
-            // Get center Block  
+        for (RoomData room : this.buildConfig.rooms) {
+            // Get center Block
             Box roomBoxt = new Box(
-                room.startBlockPos.getX(),
-                room.startBlockPos.getY(),
-                room.startBlockPos.getZ(),
-                room.startBlockPos.getX() + room.size.getX(),
-                room.startBlockPos.getY() + room.size.getY(),
-                room.startBlockPos.getZ() + room.size.getZ()
-            );
+                    room.startBlockPos.getX(),
+                    room.startBlockPos.getY(),
+                    room.startBlockPos.getZ(),
+                    room.startBlockPos.getX() + room.size.getX(),
+                    room.startBlockPos.getY() + room.size.getY(),
+                    room.startBlockPos.getZ() + room.size.getZ());
             // roomBoxt.expand(20);
             List<ItemEntity> boxItems = world.getEntitiesByType(
-                TypeFilter.instanceOf(ItemEntity.class),
-                roomBoxt,
-                EntityPredicates.VALID_ENTITY
-            );
+                    TypeFilter.instanceOf(ItemEntity.class),
+                    roomBoxt,
+                    EntityPredicates.VALID_ENTITY);
 
-            for(ItemEntity item : boxItems) {
+            for (ItemEntity item : boxItems) {
                 item.remove(RemovalReason.DISCARDED);
             }
         }
@@ -240,7 +230,7 @@ public class Zone {
 
     public void cleanupMobs() {
         Set<UUID> mobIds = mobToRoomMap.keySet();
-        for(UUID mobId : mobIds) {
+        for (UUID mobId : mobIds) {
             Entity mob = world.getEntity(mobId);
             if (mob != null) {
                 // Discard doesn't trigger kill events
@@ -256,7 +246,7 @@ public class Zone {
     public StructureBuildQueue getBuildConfig() {
         return this.buildConfig;
     }
-    
+
     public int getDifficulty() {
         return this.difficulty;
     }
@@ -299,7 +289,7 @@ public class Zone {
         return players.size();
     }
 
-    public Boolean getProcessingStructures() {
+    public Boolean isProcessingStructures() {
         return this.processingStructures;
     }
 
@@ -325,15 +315,15 @@ public class Zone {
 
     private void preventZombification(MobEntity mob) {
         if (mob instanceof PiglinEntity) {
-            ((PiglinEntity)mob).setImmuneToZombification(true);
+            ((PiglinEntity) mob).setImmuneToZombification(true);
         }
 
         if (mob instanceof PiglinBruteEntity) {
-            ((PiglinBruteEntity)mob).setImmuneToZombification(true);
+            ((PiglinBruteEntity) mob).setImmuneToZombification(true);
         }
 
         if (mob instanceof HoglinEntity) {
-            ((HoglinEntity)mob).setImmuneToZombification(true);
+            ((HoglinEntity) mob).setImmuneToZombification(true);
         }
     }
 
@@ -342,7 +332,7 @@ public class Zone {
         MobDetails mobDetails = new MobDetails();
         MobDefinition mobDefinition = this.zoneConfig.mobs.getRandomMob(this.difficulty, isBoss);
         EntityType<?> entity = Registry.ENTITY_TYPE.get(new Identifier(mobDefinition.mobType));
-        MobEntity mob = (MobEntity)entity.create((World)world);
+        MobEntity mob = (MobEntity) entity.create((World) world);
 
         mobDetails.expMultiplier = mobDefinition.xpMultiplier != null ? mobDefinition.xpMultiplier : 0;
         mob.setCustomName(Text.of(isBoss ? "Da Boss" : "Walker"));
@@ -366,27 +356,21 @@ public class Zone {
         // Boost the damage
         if (mobDefinition.damageMultiplier != null) {
             mob.getAttributeInstance(
-                EntityAttributes.GENERIC_ATTACK_DAMAGE
-            ).addPersistentModifier(
-                new EntityAttributeModifier(
-                    "damageMultiplier",
-                    this.difficulty * mobDefinition.damageMultiplier,
-                    EntityAttributeModifier.Operation.MULTIPLY_TOTAL
-                )
-            );
+                    EntityAttributes.GENERIC_ATTACK_DAMAGE).addPersistentModifier(
+                            new EntityAttributeModifier(
+                                    "damageMultiplier",
+                                    this.difficulty * mobDefinition.damageMultiplier,
+                                    EntityAttributeModifier.Operation.MULTIPLY_TOTAL));
         }
 
         // Boost the health
         if (mobDefinition.healthMultiplier != null) {
             mob.getAttributeInstance(
-                EntityAttributes.GENERIC_MAX_HEALTH
-            ).addPersistentModifier(
-                new EntityAttributeModifier(
-                    "healthMultiplier",
-                    this.difficulty * mobDefinition.healthMultiplier,
-                    EntityAttributeModifier.Operation.MULTIPLY_TOTAL
-                )
-            );
+                    EntityAttributes.GENERIC_MAX_HEALTH).addPersistentModifier(
+                            new EntityAttributeModifier(
+                                    "healthMultiplier",
+                                    this.difficulty * mobDefinition.healthMultiplier,
+                                    EntityAttributeModifier.Operation.MULTIPLY_TOTAL));
 
             // Mobs need to be healed if their life is increased
             mob.heal(mob.getMaxHealth());
@@ -399,7 +383,9 @@ public class Zone {
         // TODO: config baby chance later...
         if (mob.isBaby()) {
             mob.setBaby(false);
-            mob.equipStack(EquipmentSlot.MAINHAND, (double)this.random.nextFloat() < 0.5D ? new ItemStack(Items.CROSSBOW) : new ItemStack(Items.GOLDEN_SWORD));
+            mob.equipStack(EquipmentSlot.MAINHAND,
+                    (double) this.random.nextFloat() < 0.5D ? new ItemStack(Items.CROSSBOW)
+                            : new ItemStack(Items.GOLDEN_SWORD));
         }
 
         this.preventZombification(mob);
@@ -424,28 +410,45 @@ public class Zone {
     }
 
     public void removePlayer(PlayerEntity player) {
-        ServerPlayerEntity servPlayer = (ServerPlayerEntity)player;
+        ServerPlayerEntity servPlayer = (ServerPlayerEntity) player;
         Main.LOGGER.info("Removing Player from zone: " + servPlayer.getName());
-        
+
         this.players.remove(player);
         if (this.getPlayerCount() <= 0) {
             this.cleanupMobs();
             this.cleanupBlocks();
             this.cleanupItems();
-            
+
             Main.LOGGER.info("Cleaning up Zone");
 
             ZoneManager.cleanupZone(player.getWorld(), this.id);
         }
 
         PreviousPos previousPos = this.previousPlayerPositions.get(player.getUuid());
-        servPlayer.teleport(
-            this.world.getServer().getWorld(previousPos.worldKey),
-            previousPos.lastPos.getX(),
-            previousPos.lastPos.getY(),
-            previousPos.lastPos.getZ(),
-            player.getYaw(),
-            player.getPitch()
+        ServerWorld prevWorld = this.world.getServer().getWorld(previousPos.worldKey);
+        if (!prevWorld.getDimension().equals(this.world.getDimension())) {
+            // Don't teleport player if they are not in the same dimension as the zone
+            // this may be caused by the player not being teleported when trying to 
+            // join a zone. They get added, but not teleported, and are not actually
+            // in that zone. This will allow that player to be removed, without teleporting
+            // them to their previous location.
+            Main.LOGGER.info("Player was removed from zone, but not teleported: " + servPlayer.getName());
+            return;
+        }
+
+        FabricDimensions.teleport(
+            player,
+            prevWorld,
+            new TeleportTarget(
+                new Vec3d(
+                    previousPos.lastPos.getX(),
+                    previousPos.lastPos.getY(),
+                    previousPos.lastPos.getZ()
+                ),
+                new Vec3d(0, 0, 0),
+                player.getYaw(),
+                player.getPitch()
+            )
         );
 
         // just always set this back to 0 when someone leaves
@@ -478,13 +481,19 @@ public class Zone {
     public void teleportToZoneEntrance(ServerPlayerEntity player) {
         int randomPos = this.random.nextInt(this.buildConfig.spawnPositions.size());
         BlockPos spawnLoc = this.buildConfig.spawnPositions.get(randomPos);
-        player.teleport(
+        FabricDimensions.teleport(
+            player,
             this.world,
-            spawnLoc.getX() + 0.5,
-            spawnLoc.getY() + 1,
-            spawnLoc.getZ() + 0.5,
-            player.getYaw(),
-            player.getPitch()
+            new TeleportTarget(
+                new Vec3d(
+                    spawnLoc.getX() + 0.5,
+                    spawnLoc.getY() + 1,
+                    spawnLoc.getZ() + 0.5
+                ),
+                new Vec3d(0, 0, 0),
+                player.getYaw(),
+                player.getPitch()
+            )
         );
     }
 }

@@ -19,7 +19,6 @@ import net.minecraft.world.World;
 public abstract class MobEntityMixin extends LivingEntity {
   protected MobEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
     super(entityType, world);
-    //TODO Auto-generated constructor stub
   }
 
   // Adjust XP drop from config

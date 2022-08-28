@@ -1,17 +1,14 @@
 package io.sandbox.atlas.block_entities;
 
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.Gson;
 
-import io.github.cottonmc.cotton.gui.networking.NetworkSide;
-import io.github.cottonmc.cotton.gui.networking.ScreenNetworking;
 import io.sandbox.atlas.inventories.AtlasDeviceInventory;
-import io.sandbox.atlas.screens.AtlasDeviceGui;
+import io.sandbox.atlas.screens.AtlasDeviceConfigGui;
 import io.sandbox.atlas.screens.data_types.CurrentZoneData;
 import io.sandbox.atlas.zone.Zone;
 import io.sandbox.atlas.zone.ZoneManager;
@@ -57,7 +54,7 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
     return this.zoneInstanceId;
   }
 
-  public Boolean isConfigMenu(PlayerEntity player) {
+  public static Boolean isConfigMenu(PlayerEntity player) {
     return player.isSneaking() && player.isCreative();
   }
 
@@ -127,44 +124,46 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
   public ScreenHandler createMenu(int syncId, PlayerInventory inventory, PlayerEntity player) {
     // This method only fires on the server
 
-    // if (this.isConfigMenu(player)) {
-    //   // Admin... setting up the configs for the block
-    //   AtlasDeviceConfigGui configWindow = new AtlasDeviceConfigGui(syncId, inventory);
+    if (isConfigMenu(player)) {
+      // Admin... setting up the configs for the block
+      AtlasDeviceConfigGui configWindow = new AtlasDeviceConfigGui(syncId, inventory);
 
-    //   ScreenNetworking.of(configWindow, NetworkSide.SERVER).receive(Util.id(CONFING_UPDATE_EVENT + syncId), buf -> {
-    //     Gson gson = new Gson();
-    //     String jsonData = buf.readString();
-    //     AtlasDeviceConfigData updatedConfig = gson.fromJson(jsonData, AtlasDeviceConfigData.class);
-    //     System.out.println(updatedConfig.selectedZoneList);
-    //     this.targetZoneList = updatedConfig.selectedZoneList;
-    //   });
+      // ScreenNetworking.of(configWindow, NetworkSide.SERVER).receive(Main.id(CONFING_UPDATE_EVENT + syncId), buf -> {
+      //   Gson gson = new Gson();
+      //   String jsonData = buf.readString();
+      //   AtlasDeviceConfigData updatedConfig = gson.fromJson(jsonData, AtlasDeviceConfigData.class);
+      //   System.out.println(updatedConfig.selectedZoneList);
+      //   this.targetZoneList = updatedConfig.selectedZoneList;
+      // });
 
-    //   return configWindow;
-    // }
+      return configWindow;
+    }
 
-    AtlasDeviceGui uiWindow = new AtlasDeviceGui(syncId, inventory, this);
-    ScreenNetworking screenNetworking = ScreenNetworking.of(uiWindow, NetworkSide.SERVER);
+    return null;
 
-    screenNetworking.receive(uiWindow.selectEventId, buf -> {
-      String buttonPress = buf.readString();
-      System.out.println("Button was pressed: " + buttonPress + " : " + pos.toShortString() + " : " + pos.toString());
+    // AtlasDeviceGui uiWindow = new AtlasDeviceGui(syncId, inventory, this);
+    // ScreenNetworking screenNetworking = ScreenNetworking.of(uiWindow, NetworkSide.SERVER);
 
-      Optional<Zone> zoneOpt = ZoneManager.generateZone(world, inventory.player, pos, buttonPress);
-      if (zoneOpt.isPresent()) {
-        // TODO: emit zone selection to other player in inventory
-        this.zoneInstanceId = zoneOpt.get().getId();
-        System.out.println("Zone exists");
-      }
-    });
+    // screenNetworking.receive(uiWindow.selectEventId, buf -> {
+    //   String buttonPress = buf.readString();
+    //   System.out.println("Button was pressed: " + buttonPress + " : " + pos.toShortString() + " : " + pos.toString());
 
-    screenNetworking.receive(uiWindow.playerEnterEventId, buf -> {
-      if (this.zoneInstanceId != null && ZoneManager.getZone(this.zoneInstanceId) != null) {
-        // TODO: Check that zone exists too...
-        ZoneManager.joinZone(this.zoneInstanceId, inventory.player);
-      }
-    });
+    //   Optional<Zone> zoneOpt = ZoneManager.generateZone(world, inventory.player, pos, buttonPress);
+    //   if (zoneOpt.isPresent()) {
+    //     // TODO: emit zone selection to other player in inventory
+    //     this.zoneInstanceId = zoneOpt.get().getId();
+    //     System.out.println("Zone exists");
+    //   }
+    // });
 
-    return uiWindow;
+    // screenNetworking.receive(uiWindow.playerEnterEventId, buf -> {
+    //   if (this.zoneInstanceId != null && ZoneManager.getZone(this.zoneInstanceId) != null) {
+    //     // TODO: Check that zone exists too...
+    //     ZoneManager.joinZone(this.zoneInstanceId, inventory.player);
+    //   }
+    // });
+
+    // return uiWindow;
   }
 
   @Override

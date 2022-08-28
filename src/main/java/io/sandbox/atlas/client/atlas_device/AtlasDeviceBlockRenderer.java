@@ -13,7 +13,6 @@ public class AtlasDeviceBlockRenderer extends GeoBlockRenderer<AtlasDeviceBlockE
 
   public AtlasDeviceBlockRenderer(BlockEntityRendererFactory.Context context) {
     super(new AtlasDeviceBlockModel());
-    //TODO Auto-generated constructor stub
   }
   
   @Override

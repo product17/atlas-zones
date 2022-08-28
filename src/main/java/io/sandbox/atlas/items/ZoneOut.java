@@ -18,7 +18,6 @@ public class ZoneOut extends Item {
 
   public ZoneOut(Settings settings) {
     super(settings);
-    // TODO Auto-generated constructor stub
   }
 
   @Override

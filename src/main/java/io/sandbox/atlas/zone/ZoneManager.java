@@ -319,10 +319,17 @@ public class ZoneManager {
     }
 
     public static Boolean joinZone(UUID zoneUuid, PlayerEntity player) {
-        // add the player to the specific lab when the teleport there
+        // Remove the player from existing zone before adding to new one
+        Zone currentZone = ZoneManager.getZoneByPlayerId(player.getUuid());
+        if (currentZone != null) {
+            currentZone.removePlayer(player);
+        }
+
+        // add the player to the specific zone or it's queue
         Zone activeZone = ZoneManager.activeZones.get(zoneUuid);
         if (activeZone != null) {
-            if (activeZone.getProcessingStructures()) {
+            if (activeZone.isProcessingStructures()) {
+                // Will just overwrite zoneUuid if called more than once
                 ZoneManager.joinQueue.put(player, zoneUuid);
             } else {
                 Boolean successfullyAdded = activeZone.addPlayer(player);

@@ -16,7 +16,6 @@ public class AtlasRecallBlock extends Block {
 
   public AtlasRecallBlock(Settings settings) {
     super(settings);
-    //TODO Auto-generated constructor stub
   }
   
   @Override
