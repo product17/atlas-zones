@@ -39,6 +39,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.predicate.entity.EntityPredicates;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -48,6 +49,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.TeleportTarget;
 import net.minecraft.world.World;
 
@@ -70,6 +72,7 @@ public class Zone {
     private Random random = new Random();
     private List<Room> rooms = new ArrayList<>();
     private ServerWorld world;
+    private RegistryKey<World> worldKey;
     private ZoneConfig zoneConfig;
 
     public Zone(ZoneConfig zoneConfig, BlockPos blockPos, int instanceKey, int difficulty) {
@@ -426,15 +429,6 @@ public class Zone {
 
         PreviousPos previousPos = this.previousPlayerPositions.get(player.getUuid());
         ServerWorld prevWorld = this.world.getServer().getWorld(previousPos.worldKey);
-        if (!prevWorld.getDimension().equals(this.world.getDimension())) {
-            // Don't teleport player if they are not in the same dimension as the zone
-            // this may be caused by the player not being teleported when trying to 
-            // join a zone. They get added, but not teleported, and are not actually
-            // in that zone. This will allow that player to be removed, without teleporting
-            // them to their previous location.
-            Main.LOGGER.info("Player was removed from zone, but not teleported: " + servPlayer.getName());
-            return;
-        }
 
         FabricDimensions.teleport(
             player,
@@ -468,8 +462,9 @@ public class Zone {
         this.processingStructures = processing;
     }
 
-    public void setWorld(ServerWorld world) {
+    public void setWorld(ServerWorld world, RegistryKey<World> worldKey) {
         this.world = world;
+        this.worldKey = worldKey;
     }
 
     public Boolean shouldKeepInventory(UUID playerId) {
@@ -483,7 +478,7 @@ public class Zone {
         BlockPos spawnLoc = this.buildConfig.spawnPositions.get(randomPos);
         FabricDimensions.teleport(
             player,
-            this.world,
+            this.world.getServer().getWorld(this.worldKey),
             new TeleportTarget(
                 new Vec3d(
                     spawnLoc.getX() + 0.5,

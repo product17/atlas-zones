@@ -105,7 +105,7 @@ public class ZoneManager {
 
         // Create new Zone
         ZoneConfig zoneConfig = AtlasZonesConfig.getZoneConfig(zoneName);
-        zoneConfig.dimentionType = zoneConfig.dimentionType != null ? zoneConfig.dimentionType : "atlas:blank_zone";
+        zoneConfig.dimentionType = zoneConfig.dimentionType != null ? zoneConfig.dimentionType : "piglin_gate:gate_realm";
         int nextInstanceKey = ZoneManager.getNextInstanceKeyInWorld(zoneConfig.dimentionType);
         
         // nextInstanceKey is used to place the startlocation so zones don't overlap
@@ -121,10 +121,10 @@ public class ZoneManager {
         // set start pos by checking existing in the biome
 
         ServerWorld serverWorld = (ServerWorld) world;
-        for (RegistryKey<World> server : world.getServer().getWorldRegistryKeys()) {
-            if (server.getValue().equals(new Identifier(zoneConfig.dimentionType))) {
-                serverWorld = world.getServer().getWorld(server);
-                zone.setWorld(serverWorld);
+        for (RegistryKey<World> worldKey : world.getServer().getWorldRegistryKeys()) {
+            if (worldKey.getValue().equals(new Identifier(zoneConfig.dimentionType))) {
+                serverWorld = world.getServer().getWorld(worldKey);
+                zone.setWorld(serverWorld, worldKey);
             }
         }
 
