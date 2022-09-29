@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "id": "atlas",
+  "id": "sandbox-zones",
   "version": "${version}",
 
-  "name": "Sandbox Atlas",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Sandbox Zones",
+  "description": "Build out a random generating instanced zone to explore!",
   "authors": [
-    "Brent Crocker"
+    "Boss Hog"
   ],
   "contact": {
     "homepage": "https://fabricmc.net/",
@@ -14,24 +14,25 @@
   },
 
   "license": "CC0-1.0",
-  "icon": "assets/atlas/icon.png",
+  "icon": "assets/zones/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "client": [
-      "io.sandbox.atlas.client.MainClient"
+      "io.sandbox.zones.client.MainClient"
     ],
     "main": [
-      "io.sandbox.atlas.Main"
+      "io.sandbox.zones.Main"
     ]
   },
   "mixins": [
-    "atlas.mixins.json"
+    "zones.mixins.json"
   ],
 
   "depends": {
     "fabricloader": ">=0.14.8",
     "fabric": "*",
+    "geckolib3": "*",
     "minecraft": "~1.19",
     "java": ">=17"
   },

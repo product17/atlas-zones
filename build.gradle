@@ -34,7 +34,7 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	modImplementation include("io.github.cottonmc:LibGui:${project.libgui_version}")
-	modImplementation include('software.bernie.geckolib:geckolib-fabric-1.19:3.1.15')
+	modImplementation 'software.bernie.geckolib:geckolib-fabric-1.19:3.1.20'
 
 	// Uncomment the following line to enable the deprecated Fabric API modules. 
 	// These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.
