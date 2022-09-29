@@ -12,6 +12,7 @@ import io.sandbox.atlas.config.data_types.ZoneConfig;
 import io.sandbox.atlas.processors.CleanupProcessor;
 import io.sandbox.atlas.processors.JigsawProcessor;
 import io.sandbox.atlas.processors.SpawnProcessor;
+import io.sandbox.atlas.zone.data_types.DimensionStartPoints;
 import io.sandbox.atlas.zone.data_types.RoomData;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.JigsawBlock;
@@ -42,6 +43,7 @@ public class ZoneManager {
     private static Map<UUID, UUID> playerToZoneMap = new HashMap<>();
     private static Random random = Random.create();
     private static Map<PlayerEntity, UUID> joinQueue = new HashMap<>();
+    private static Map<String, DimensionStartPoints> startPoints = new HashMap<>();
     
     public static void addZone(UUID key, Zone lab) {
         ZoneManager.activeZones.put(key, lab);
@@ -64,15 +66,11 @@ public class ZoneManager {
     }
 
     public static int getNextInstanceKeyInWorld(String worldName) {
-        Map<Integer, Zone> activeZones = ZoneManager.getActiveZonesInWorld(worldName);
-        int nextInstanceKey = 0;
-        for (int instanceKey : activeZones.keySet()) {
-            if (instanceKey == nextInstanceKey) {
-                nextInstanceKey++;
-            }
+        if (!startPoints.containsKey(worldName)) {
+            startPoints.put(worldName, new DimensionStartPoints());
         }
 
-        return nextInstanceKey;
+        return startPoints.get(worldName).getNextPoint();
     }
 
     public static Zone getZone(UUID key) {
@@ -128,9 +126,9 @@ public class ZoneManager {
             }
         }
 
-        StructureTemplateManager structureManager = serverWorld.getStructureTemplateManager();
+        StructureTemplateManager structureTemplateManager = serverWorld.getStructureTemplateManager();
         StructurePoolConfig startPool = AtlasZonesConfig.structurePools.get(zoneConfig.roomPools.start);
-        Optional<StructureTemplate> structure = structureManager.getTemplate(new Identifier(startPool.elements[0].element.location));
+        Optional<StructureTemplate> structure = structureTemplateManager.getTemplate(new Identifier(startPool.elements[0].element.location));
         if (structure.isPresent()) {
             StructureTemplate startStructure = structure.get();
             StructurePlacementData placementData = new StructurePlacementData().setMirror(BlockMirror.NONE);
