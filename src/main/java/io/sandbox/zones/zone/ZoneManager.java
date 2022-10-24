@@ -9,9 +9,7 @@ import java.util.UUID;
 import io.sandbox.zones.config.AtlasZonesConfig;
 import io.sandbox.zones.config.data_types.StructurePoolConfig;
 import io.sandbox.zones.config.data_types.ZoneConfig;
-import io.sandbox.zones.processors.CleanupProcessor;
 import io.sandbox.zones.processors.JigsawProcessor;
-import io.sandbox.zones.processors.SpawnProcessor;
 import io.sandbox.zones.zone.data_types.DimensionStartPoints;
 import io.sandbox.zones.zone.data_types.RoomData;
 import net.minecraft.block.BlockState;
@@ -54,16 +52,16 @@ public class ZoneManager {
         ZoneManager.zonesOnCooldown.put(zone.blockPos, world.getTime());
     }
 
-    public static Map<Integer, Zone> getActiveZonesInWorld(String worldName) {
-        HashMap<Integer, Zone> activeZones = new HashMap<Integer, Zone>();
-        for (Zone zoneConf : ZoneManager.activeZones.values()) {
-            if (zoneConf.getDimentionType().equals(worldName)) {
-                activeZones.put(zoneConf.getInstanceKey(), zoneConf);
-            }
-        }
+    // public static Map<Integer, Zone> getActiveZonesInWorld(String worldName) {
+    //     HashMap<Integer, Zone> activeZones = new HashMap<Integer, Zone>();
+    //     for (Zone zoneConf : ZoneManager.activeZones.values()) {
+    //         if (zoneConf.getDimentionType().equals(worldName)) {
+    //             activeZones.put(zoneConf.getInstanceKey(), zoneConf);
+    //         }
+    //     }
 
-        return activeZones;
-    }
+    //     return activeZones;
+    // }
 
     public static int getNextInstanceKeyInWorld(String worldName) {
         if (!startPoints.containsKey(worldName)) {
@@ -103,8 +101,8 @@ public class ZoneManager {
 
         // Create new Zone
         ZoneConfig zoneConfig = AtlasZonesConfig.getZoneConfig(zoneName);
-        zoneConfig.dimentionType = zoneConfig.dimentionType != null ? zoneConfig.dimentionType : "piglin_gate:gate_realm";
-        int nextInstanceKey = ZoneManager.getNextInstanceKeyInWorld(zoneConfig.dimentionType);
+        zoneConfig.dimensionType = zoneConfig.dimensionType != null ? zoneConfig.dimensionType : "piglin_gate:gate_realm";
+        int nextInstanceKey = ZoneManager.getNextInstanceKeyInWorld(zoneConfig.dimensionType);
         
         // nextInstanceKey is used to place the startlocation so zones don't overlap
         BlockPos startLocation = new BlockPos(0, zoneConfig.worldHeight, nextInstanceKey * 64);
@@ -120,7 +118,7 @@ public class ZoneManager {
 
         ServerWorld serverWorld = (ServerWorld) world;
         for (RegistryKey<World> worldKey : world.getServer().getWorldRegistryKeys()) {
-            if (worldKey.getValue().equals(new Identifier(zoneConfig.dimentionType))) {
+            if (worldKey.getValue().equals(new Identifier(zoneConfig.dimensionType))) {
                 serverWorld = world.getServer().getWorld(worldKey);
                 zone.setWorld(serverWorld, worldKey);
             }
@@ -135,9 +133,9 @@ public class ZoneManager {
             RoomData roomData = structConfig.createNextRoom(false); // add a new room before processing
 
             // Add the config processors
-            placementData.addProcessor(new JigsawProcessor(structConfig));
-            placementData.addProcessor(new SpawnProcessor(structConfig));
-            placementData.addProcessor(new CleanupProcessor(structConfig));
+            placementData.addProcessor(new JigsawProcessor());
+            // placementData.addProcessor(new SpawnProcessor(structConfig));
+            // placementData.addProcessor(new CleanupProcessor(structConfig));
 
             // Place the Start Structure
             startStructure.place(serverWorld, startLocation, null, placementData, (net.minecraft.util.math.random.Random) ZoneManager.random, 0);
@@ -211,9 +209,9 @@ public class ZoneManager {
                     // NOTE: this can cause an infinite loop if there is no max size
                     StructurePlacementData pathPlacementData = new StructurePlacementData()
                         .setMirror(BlockMirror.NONE);
-                    pathPlacementData.addProcessor(new JigsawProcessor(structConfig));
-                    pathPlacementData.addProcessor(new SpawnProcessor(structConfig));
-                    pathPlacementData.addProcessor(new CleanupProcessor(structConfig));
+                    pathPlacementData.addProcessor(new JigsawProcessor());
+                    // pathPlacementData.addProcessor(new SpawnProcessor(structConfig));
+                    // pathPlacementData.addProcessor(new CleanupProcessor(structConfig));
 
                     // Get the target Jigsaw blocks in the chosen structure
                     List<StructureBlockInfo> structBlocks = pathStructure

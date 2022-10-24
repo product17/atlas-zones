@@ -1,17 +1,16 @@
 package io.sandbox.zones;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import io.sandbox.lib.SandboxLogger;
 import io.sandbox.zones.block_entities.BlockEntityLoader;
 import io.sandbox.zones.blocks.BlockLoader;
-import io.sandbox.zones.config.AtlasZonesConfig;
 import io.sandbox.zones.config.BlockBreakConfig;
 import io.sandbox.zones.config.BlockPlaceConfig;
 import io.sandbox.zones.config.ElytraConfig;
 import io.sandbox.zones.config.PlayerRespawnConfig;
 import io.sandbox.zones.items.ItemLoader;
+import io.sandbox.zones.processors.ProcessorLoader;
 import io.sandbox.zones.screens.ScreenLoader;
+import io.sandbox.zones.zone.ZoneManagerStore;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
 
@@ -20,16 +19,21 @@ public class Main implements ModInitializer {
 	// This logger is used to write text to the console and the log file.
 	// It is considered best practice to use your mod id as the logger's name.
 	// That way, it's clear which mod wrote info, warnings, and errors.
-	public static final Logger LOGGER = LoggerFactory.getLogger(modId);
+	// public static final Logger LOGGER = LoggerFactory.getLogger(modId);
+  public static final SandboxLogger LOGGER = new SandboxLogger(modId);
 
 	@Override
 	public void onInitialize() {
     LOGGER.info("Loading mod: " + modId);
 
+    // Load in datapacks
+    ZoneManagerStore.initDatapackLoader();
+    ProcessorLoader.init();
+
     // Initialize a main config
-    AtlasZonesConfig atlasConfig = new AtlasZonesConfig(modId);
-    atlasConfig.readConfigFromFile(); // This line doesn't really do anything yet...
-    atlasConfig.initConfigListener();
+    // AtlasZonesConfig atlasConfig = new AtlasZonesConfig(modId);
+    // atlasConfig.readConfigFromFile(); // This line doesn't really do anything yet...
+    // atlasConfig.initConfigListener();
 
     // Allow/disable elytra based on zone configs
     ElytraConfig.initElytraListener();

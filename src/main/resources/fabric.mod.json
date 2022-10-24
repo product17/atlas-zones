@@ -34,7 +34,8 @@
     "fabric": "*",
     "geckolib3": "*",
     "minecraft": "~1.19",
-    "java": ">=17"
+    "java": ">=17",
+    "sandbox-lib": "*"
   },
   "suggests": {
     "another-mod": "*"

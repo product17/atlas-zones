@@ -27,9 +27,6 @@ public class StructureBuildQueue {
     public LinkedList<BlockPos> spawnPositions = new LinkedList<>();
 
     public StructureBuildQueue(String spawnBlockTypeString) {
-        // reset them on create
-        mainPathQueue = new LinkedList<>();
-        jigsawQueue = new LinkedList<>();
         Block block = Registry.BLOCK.get(new Identifier(spawnBlockTypeString));
         if (block != null) {
             this.playerSpawnBlockType = block;

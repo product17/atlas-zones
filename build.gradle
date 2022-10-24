@@ -22,6 +22,10 @@ repositories {
 		url = "https://server.bbkr.space/artifactory/libs-release"
 	}
 	maven { url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
+
+	flatDir {
+		dirs "externalMods"
+	}
 }
 
 dependencies {
@@ -35,6 +39,8 @@ dependencies {
 
 	modImplementation include("io.github.cottonmc:LibGui:${project.libgui_version}")
 	modImplementation 'software.bernie.geckolib:geckolib-fabric-1.19:3.1.20'
+
+	modImplementation "io.sandbox.lib:sandbox-lib-1.19.2+2022-09-27r9"
 
 	// Uncomment the following line to enable the deprecated Fabric API modules. 
 	// These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.

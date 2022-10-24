@@ -11,6 +11,7 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import io.sandbox.lib.Config;
 import io.sandbox.zones.Main;
 import io.sandbox.zones.config.data_types.AtlasZonesBaseConfig;
 import io.sandbox.zones.config.data_types.StructurePoolConfig;
@@ -96,14 +97,11 @@ public class AtlasZonesConfig {
           Map<Identifier, Resource> templateList = manager.findResources("worldgen/template_pool", path -> true);
           System.out.println("Templates: " + templateList.keySet().toString());
           for (Resource resource : templateList.values()) {
-            String file = getFileString(resource);
-            if (file != null) {
-              StructurePoolConfig pool = gson.fromJson(file, StructurePoolConfig.class);
-              AtlasZonesConfig.addPoolConfig(pool);
-            }
+            Config<StructurePoolConfig> poolConfig = new Config<StructurePoolConfig>(StructurePoolConfig.class, resource);
+            AtlasZonesConfig.addPoolConfig(poolConfig.getConfig());
           }
 
-          Map<Identifier, Resource> zoneList = manager.findResources("atlas_zone", path -> true);
+          Map<Identifier, Resource> zoneList = manager.findResources("sandbox-zones", path -> true);
           System.out.println("ZoneList: " + zoneList.keySet().toString());
           for (Resource resource : zoneList.values()) {
             String file = getFileString(resource);

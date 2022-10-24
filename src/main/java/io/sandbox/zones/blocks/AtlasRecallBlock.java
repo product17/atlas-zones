@@ -2,6 +2,7 @@ package io.sandbox.zones.blocks;
 
 import io.sandbox.zones.zone.Zone;
 import io.sandbox.zones.zone.ZoneManager;
+import io.sandbox.zones.zone.ZoneManagerStore;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
@@ -21,7 +22,7 @@ public class AtlasRecallBlock extends Block {
   @Override
   public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
     if (!world.isClient) {
-      Zone zone = ZoneManager.getZoneByPlayerId(player.getUuid());
+      Zone zone = ZoneManagerStore.getZoneByPlayerId(player.getUuid());
       if (zone != null) {
         zone.removePlayer(player);
       }

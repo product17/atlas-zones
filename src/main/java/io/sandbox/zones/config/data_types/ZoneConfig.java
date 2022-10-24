@@ -16,7 +16,7 @@ public class ZoneConfig {
   public String name;
   public RoomPoolConfig roomPools;
   public Integer worldHeight = 64;
-  public String dimentionType;
+  public String dimensionType;
   public String spawnBlock = "minecraft:target";
 
   public static String getLootTableAtLevel(int level, List<LootTier> lootTableList) {

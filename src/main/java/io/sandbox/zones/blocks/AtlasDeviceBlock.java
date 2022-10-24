@@ -7,7 +7,8 @@ import io.sandbox.zones.Main;
 import io.sandbox.zones.block_entities.AtlasDeviceBlockEntity;
 import io.sandbox.zones.block_entities.BlockEntityLoader;
 import io.sandbox.zones.zone.Zone;
-import io.sandbox.zones.zone.ZoneManager;
+import io.sandbox.zones.zone.ZoneManagerStore;
+import io.sandbox.zones.zone.ZoneManagerV2;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -23,6 +24,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
@@ -75,37 +77,41 @@ public class AtlasDeviceBlock extends BlockWithEntity {
           // Currently opens the Config menu for Sneaking Creative mode
           player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
         } else {
-          Long remainingCooldown = ZoneManager.getZoneCooldown(pos);
-          Long cooldown = player.getWorld().getTime() - ZoneManager.getZoneCooldown(pos);
-          if (remainingCooldown > 0 && cooldown < ZoneManager.DEFAULT_COOLDOWN_TICKS) {
-            Long cooldownLeft = (long) Math.ceil((ZoneManager.DEFAULT_COOLDOWN_TICKS - cooldown) / 20);
+          
+          Long cooldownStart = ZoneManagerStore.getZoneCooldown(world.getDimensionKey().getValue().toString(), pos);
+          Long cooldown = world.getTime() - cooldownStart;
+          if (cooldownStart > 0 && cooldown < ZoneManagerV2.DEFAULT_COOLDOWN_TICKS) {
+            Long cooldownLeft = (long) Math.ceil((ZoneManagerV2.DEFAULT_COOLDOWN_TICKS - cooldown) / 20);
             Long minutes = Math.floorDiv(cooldownLeft, 60);
             Long seconds = cooldownLeft % 60;
             player.sendMessage(Text.of("Atlas is on cooldown: " + minutes + " : " + seconds));
           } else {
-            Zone zone = ZoneManager.getZoneAtLocation(pos);
+            Zone zone = ZoneManagerStore.getZoneAtLocation(pos);
             if (zone != null) {
               // If it exists, join
-              ZoneManager.joinZone(zone.getId(), player);
+              zone.addPlayer(player);
               Main.LOGGER.info("Added player: " + player.getDisplayName());
             } else {
-              Optional<Zone> zoneOpt = ZoneManager.generateZone(world, player, pos, "piglin_gate:base_lab");
+              Optional<Zone> zoneOpt = ZoneManagerV2.generateZone(world, player, pos, "piglin_gate:base_lab");
               if (zoneOpt.isPresent()) {
-                UUID zoneInstanceId = zoneOpt.get().getId();
+                Zone zoneInstance = zoneOpt.get();
+                UUID zoneInstanceId = zoneInstance.getId();
                 AtlasDeviceBlockEntity atlasEntity = (AtlasDeviceBlockEntity)world.getBlockEntity(pos);
                 atlasEntity.zoneInstanceId = zoneInstanceId;
                 atlasEntity.buildingZone = true;
   
-                ZoneManager.joinZone(zoneInstanceId, player);
+                zoneInstance.addPlayer(player);
                 Main.LOGGER.info("Created Zone and added player: " + player.getDisplayName());
               }
             }
           }
         }
+
+        return ActionResult.SUCCESS;
       }
     }
 
-		return ActionResult.SUCCESS;
+    return ActionResult.FAIL;
 	}
 
     @Override

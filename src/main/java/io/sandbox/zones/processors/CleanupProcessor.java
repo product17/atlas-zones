@@ -2,25 +2,15 @@ package io.sandbox.zones.processors;
 
 import com.mojang.serialization.Codec;
 
-import io.sandbox.zones.zone.StructureBuildQueue;
-import net.minecraft.block.Blocks;
-import net.minecraft.structure.StructureTemplate.StructureBlockInfo;
 import net.minecraft.structure.StructurePlacementData;
-import net.minecraft.structure.processor.StructureProcessor;
+import net.minecraft.structure.StructureTemplate.StructureBlockInfo;
 import net.minecraft.structure.processor.StructureProcessorType;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.WorldView;
 
-public class CleanupProcessor extends StructureProcessor {
-    public static final Codec<CleanupProcessor> CODEC = Codec.unit(new CleanupProcessor(new StructureBuildQueue(Registry.BLOCK.getId(Blocks.TARGET).toString())));
-    
-    private StructureBuildQueue config;
-
-    public CleanupProcessor(StructureBuildQueue config) {
-        // Can pass the depth level here
-        this.config = config;
-    }
+public class CleanupProcessor extends ZoneProcessorBase {
+    public static String NAME = "cleanup_processor";
+    public static final Codec<CleanupProcessor> CODEC = Codec.unit(new CleanupProcessor());
 
     @Override
     public StructureBlockInfo process(

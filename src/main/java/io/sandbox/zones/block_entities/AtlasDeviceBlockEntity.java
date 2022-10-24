@@ -12,9 +12,12 @@ import io.sandbox.zones.screens.AtlasDeviceConfigGui;
 import io.sandbox.zones.screens.data_types.CurrentZoneData;
 import io.sandbox.zones.zone.Zone;
 import io.sandbox.zones.zone.ZoneManager;
+import io.sandbox.zones.zone.ZoneManagerStore;
+import io.sandbox.zones.zone.ZoneManagerV2;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.command.argument.DimensionArgumentType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
@@ -60,15 +63,19 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
 
   public static void tick(World world, BlockPos pos, BlockState state, AtlasDeviceBlockEntity atlasDeviceEntity) {
     if (!world.isClient && atlasDeviceEntity.buildingZone) {
-      Zone zone = ZoneManager.getZone(atlasDeviceEntity.zoneInstanceId);
+      Zone zone = ZoneManagerStore.getActiveZone(atlasDeviceEntity.zoneInstanceId);
+      if (zone == null) {
+        return;
+      }
+
       if (zone.hasNextMainStructure()) {
-        ZoneManager.addNextMainStructure(zone);
+        ZoneManagerV2.addNextMainStructure(zone);
       } else if (zone.hasNextJigsawStructure()) {
-        ZoneManager.addNextJigsawStructure(zone);
+        ZoneManagerV2.addNextJigsawStructure(zone);
       } else {
         atlasDeviceEntity.buildingZone = false;
         zone.setProcessingStructures(atlasDeviceEntity.buildingZone);
-        ZoneManager.processJoinQueue();
+        // zone.addPlayer(null); // Process all queued players to join
       }
     }
   }

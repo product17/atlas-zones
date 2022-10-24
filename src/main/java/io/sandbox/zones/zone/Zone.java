@@ -2,6 +2,7 @@ package io.sandbox.zones.zone;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,6 +67,7 @@ public class Zone {
     private Boolean hasSpawnedMobsAndChests = false;
     private Map<UUID, Room> mobToRoomMap = new HashMap<>();
     private List<PlayerEntity> players = new ArrayList<>();
+    private Set<PlayerEntity> playerJoinQueue = new HashSet<>();
     private HashMap<UUID, PreviousPos> previousPlayerPositions = new HashMap<>();
     private Boolean processingStructures = true;
     private Random random = new Random();
@@ -77,7 +79,7 @@ public class Zone {
     public Zone(ZoneConfig zoneConfig, BlockPos blockPos, int instanceKey, int difficulty) {
         // Loot tables?
         this.blockPos = blockPos;
-        this.dimentionType = zoneConfig.dimentionType;
+        this.dimentionType = zoneConfig.dimensionType;
         this.difficulty = difficulty;
         this.instanceKey = instanceKey;
         this.zoneConfig = zoneConfig;
@@ -92,18 +94,33 @@ public class Zone {
             return false;
         }
 
+        if (player != null) {
+            this.playerJoinQueue.add(player);
+        }
+
+        if (this.isProcessingStructures()) {
+            // Short Circuit if still building the structures
+            return false;
+        }
+
         if (this.world != null) {
-            this.players.add(player);
-            ServerPlayerEntity servPlayer = (ServerPlayerEntity) player;
+            for (PlayerEntity queuedPlayer : this.playerJoinQueue) {
+                this.players.add(queuedPlayer);
+                ServerPlayerEntity servPlayer = (ServerPlayerEntity) queuedPlayer;
 
-            this.previousPlayerPositions.put(
-                    servPlayer.getUuid(),
-                    new PreviousPos(
-                            servPlayer.getBlockPos(),
-                            servPlayer.getWorld().getRegistryKey()));
+                this.previousPlayerPositions.put(
+                        servPlayer.getUuid(),
+                        new PreviousPos(
+                                servPlayer.getBlockPos(),
+                                servPlayer.getWorld().getRegistryKey()));
 
-            this.teleportToZoneEntrance(servPlayer);
+                this.teleportToZoneEntrance(servPlayer);
+            }
 
+            // Reset the queue
+            this.playerJoinQueue = new HashSet<>();
+
+            // TODO: this can probably be done before the player is in the zone now
             if (!this.hasSpawnedMobsAndChests) {
                 for (RoomData roomData : this.buildConfig.rooms) {
                     Room room = new Room();
@@ -311,6 +328,16 @@ public class Zone {
         return this.buildConfig.jigsawQueue.peek() != null;
     }
 
+    public Boolean hasPlayer(UUID playerId) {
+        for (PlayerEntity player : this.players) {
+            if (player.getUuid().equals(playerId)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public Boolean matchEntryPoint(BlockPos blockPos) {
         return this.blockPos.equals(blockPos);
     }
@@ -400,7 +427,7 @@ public class Zone {
         }
 
         this.mobToRoomMap.put(mob.getUuid(), room);
-        ZoneManager.mapMobToZone(mob.getUuid(), this);
+        ZoneManagerStore.mapMobToZone(mob.getUuid(), this);
     }
 
     public void removeMobById(UUID mobId) {
@@ -423,7 +450,7 @@ public class Zone {
 
             Main.LOGGER.info("Cleaning up Zone");
 
-            ZoneManager.cleanupZone(player.getWorld(), this.id);
+            ZoneManagerStore.cleanupZone(player.getWorld(), this.id);
         }
 
         PreviousPos previousPos = this.previousPlayerPositions.get(player.getUuid());
