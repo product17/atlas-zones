@@ -157,7 +157,7 @@ public class ZoneManagerStore {
   }
 
   public static void removeMobFromZones(UUID mobId) {
-    Zone zone = ZoneManager.getZoneByMobId(mobId);
+    Zone zone = ZoneManagerStore.getZoneByMobId(mobId);
     if (zone != null) {
       zone.removeMobById(mobId);
     }

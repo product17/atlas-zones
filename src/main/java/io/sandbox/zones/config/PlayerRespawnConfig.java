@@ -1,7 +1,7 @@
 package io.sandbox.zones.config;
 
 import io.sandbox.zones.zone.Zone;
-import io.sandbox.zones.zone.ZoneManager;
+import io.sandbox.zones.zone.ZoneManagerStore;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.minecraft.server.network.ServerPlayerEntity;
 
@@ -13,7 +13,7 @@ public class PlayerRespawnConfig {
 			ServerPlayerEntity newPlayer,
 			boolean alive
 		) -> {
-			Zone zone = ZoneManager.getZoneByPlayerId(newPlayer.getUuid());
+			Zone zone = ZoneManagerStore.getZoneByPlayerId(newPlayer.getUuid());
 			if (zone != null) {
 				if (zone.shouldKeepInventory(newPlayer.getUuid())) {
 					newPlayer.getInventory().clone(oldPlayer.getInventory());

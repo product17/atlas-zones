@@ -203,19 +203,15 @@ public class ZoneManagerV2 {
       Main.id(CleanupProcessor.NAME),
     };
 
-    Main.LOGGER.info("Zone List Size: " + processorList.length);
-
     for (Identifier id : processorList) {
-      Main.LOGGER.info("Processor Id: " + id.toString());
+    
       ZoneProcessorBase processor = ProcessorLoader.getProcessor(id);
       if (processor == null) {
-        Main.LOGGER.warn("Zone Processor not found: " + id.toString());
         continue;
       }
 
       
       if (processor instanceof ZoneProcessorBase) {
-        Main.LOGGER.info("Zone Processor Added: " + id.toString());
         processor.setConfig(structConfig);
       }
 
@@ -250,7 +246,7 @@ public class ZoneManagerV2 {
     }
 
     // Rotate 90 and run the check again
-    BlockRotation adjusted = ZoneManager.getRotationAmount(jigsawDirection, targetDirection.rotateClockwise(Axis.Y));
+    BlockRotation adjusted = ZoneManagerV2.getRotationAmount(jigsawDirection, targetDirection.rotateClockwise(Axis.Y));
     // If it's the same, just rotate 90
     if (adjusted.equals(BlockRotation.NONE)) {
       return BlockRotation.CLOCKWISE_90;

@@ -108,7 +108,6 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements GeoBlockEntit
 
   @Override
   public AnimatableInstanceCache getAnimatableInstanceCache() {
-    // TODO Auto-generated method stub
     return this.animationCache;
   }
 }

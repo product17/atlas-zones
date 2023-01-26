@@ -28,7 +28,6 @@ public class SpawnProcessor extends ZoneProcessorBase {
     ) {
         BlockState state = structureBlockInfo.state;
         if (state.isOf(config.playerSpawnBlockType)) {
-            System.out.println("Testing The Spawn: " + config.playerSpawnBlockType);
             config.spawnPositions.add(structureBlockInfo.pos);
             return null; // Does this remove the block?
         }
