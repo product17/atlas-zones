@@ -16,6 +16,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.JigsawBlock;
 import net.minecraft.block.entity.JigsawBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructurePlacementData;
 import net.minecraft.structure.StructureTemplate;
@@ -28,7 +29,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Direction.Axis;
 import net.minecraft.util.math.random.Random;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 
 public class ZoneManagerV2 {

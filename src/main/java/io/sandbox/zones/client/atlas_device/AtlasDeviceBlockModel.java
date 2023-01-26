@@ -3,9 +3,9 @@ package io.sandbox.zones.client.atlas_device;
 import io.sandbox.zones.Main;
 import io.sandbox.zones.block_entities.AtlasDeviceBlockEntity;
 import net.minecraft.util.Identifier;
-import software.bernie.geckolib3.model.AnimatedGeoModel;
+import software.bernie.geckolib.model.GeoModel;
 
-public class AtlasDeviceBlockModel extends AnimatedGeoModel<AtlasDeviceBlockEntity> {
+public class AtlasDeviceBlockModel extends GeoModel<AtlasDeviceBlockEntity> {
 
   @Override
   public Identifier getAnimationResource(AtlasDeviceBlockEntity animatable) {

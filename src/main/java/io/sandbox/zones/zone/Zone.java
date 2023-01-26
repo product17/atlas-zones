@@ -41,6 +41,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.predicate.entity.EntityPredicates;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -49,8 +51,6 @@ import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.TeleportTarget;
 import net.minecraft.world.World;
 
@@ -170,7 +170,7 @@ public class Zone {
             if (this.breakableBlocks == null) {
                 this.breakableBlocks = new ArrayList<>();
                 for (String blockName : this.zoneConfig.breakableBlocks) {
-                    this.breakableBlocks.add(Registry.BLOCK.get(new Identifier(blockName)));
+                    this.breakableBlocks.add(Registries.BLOCK.get(new Identifier(blockName)));
                 }
             }
 
@@ -194,7 +194,7 @@ public class Zone {
             if (this.placeableBlocks == null) {
                 this.placeableBlocks = new ArrayList<>();
                 for (String itemName : this.zoneConfig.placeableBlocks) {
-                    this.placeableBlocks.add(Registry.ITEM.get(new Identifier(itemName)));
+                    this.placeableBlocks.add(Registries.ITEM.get(new Identifier(itemName)));
                 }
             }
 
@@ -219,7 +219,7 @@ public class Zone {
                 // this.world.getblock
                 BlockState existingBlock = this.world.getBlockState(blockPos);
                 if (existingBlock != null) {
-                    BlockState blockState = Registry.BLOCK.get(new Identifier("air")).getDefaultState();
+                    BlockState blockState = Registries.BLOCK.get(new Identifier("air")).getDefaultState();
                     this.world.setBlockState(blockPos, blockState);
                 }
             }
@@ -365,7 +365,7 @@ public class Zone {
     private void placeMob(Room room, BlockPos spawnPos, Boolean isBoss) {
         MobDetails mobDetails = new MobDetails();
         MobDefinition mobDefinition = this.zoneConfig.mobs.getRandomMob(this.difficulty, isBoss);
-        EntityType<?> entity = Registry.ENTITY_TYPE.get(new Identifier(mobDefinition.mobType));
+        EntityType<?> entity = Registries.ENTITY_TYPE.get(new Identifier(mobDefinition.mobType));
         MobEntity mob = (MobEntity) entity.create((World) world); 
 
         mobDetails.expMultiplier = mobDefinition.xpMultiplier != null ? mobDefinition.xpMultiplier : 0;

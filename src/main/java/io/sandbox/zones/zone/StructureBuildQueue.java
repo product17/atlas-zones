@@ -9,11 +9,11 @@ import io.sandbox.zones.zone.data_types.RoomData;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.JigsawBlockEntity;
+import net.minecraft.registry.Registries;
 import net.minecraft.structure.StructureTemplate.StructureBlockInfo;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
 
 public class StructureBuildQueue {
     public LinkedList<StructureBlockInfo> mainPathQueue = new LinkedList<>();
@@ -27,7 +27,7 @@ public class StructureBuildQueue {
     public LinkedList<BlockPos> spawnPositions = new LinkedList<>();
 
     public StructureBuildQueue(String spawnBlockTypeString) {
-        Block block = Registry.BLOCK.get(new Identifier(spawnBlockTypeString));
+        Block block = Registries.BLOCK.get(new Identifier(spawnBlockTypeString));
         if (block != null) {
             this.playerSpawnBlockType = block;
         } else {

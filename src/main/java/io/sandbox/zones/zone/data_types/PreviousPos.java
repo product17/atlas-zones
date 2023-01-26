@@ -1,7 +1,7 @@
 package io.sandbox.zones.zone.data_types;
 
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.world.World;
 
 public class PreviousPos {

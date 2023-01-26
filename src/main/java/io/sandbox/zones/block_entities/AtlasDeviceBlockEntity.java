@@ -5,36 +5,26 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.gson.Gson;
-
 import io.sandbox.zones.zone.Zone;
-import io.sandbox.zones.zone.ZoneManager;
 import io.sandbox.zones.zone.ZoneManagerStore;
 import io.sandbox.zones.zone.ZoneManagerV2;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import software.bernie.geckolib3.core.IAnimatable;
-import software.bernie.geckolib3.core.PlayState;
-import software.bernie.geckolib3.core.builder.AnimationBuilder;
-import software.bernie.geckolib3.core.controller.AnimationController;
-import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
-import software.bernie.geckolib3.core.manager.AnimationData;
-import software.bernie.geckolib3.core.manager.AnimationFactory;
+import software.bernie.geckolib.animatable.GeoBlockEntity;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
-public class AtlasDeviceBlockEntity extends BlockEntity implements IAnimatable {
+public class AtlasDeviceBlockEntity extends BlockEntity implements GeoBlockEntity {
   private static final String BUILDING_ZONE_FIELD = "building_zone";
   public static final String CONFING_UPDATE_EVENT = "button_selected";
   private ArrayList<String> targetZoneList = new ArrayList<>(); // list of zones that can be selected
@@ -42,8 +32,10 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements IAnimatable {
   private final String TARGET_ZONE_LIST = "target_zone_list";
   private final DefaultedList<ItemStack> items = DefaultedList.ofSize(4, ItemStack.EMPTY);
   public int lapisCount = 0;
-  public AnimationFactory factory = new AnimationFactory(this);
+  public AnimatableInstanceCache animationCache = GeckoLibUtil.createInstanceCache(this);
   public Boolean buildingZone = false;
+
+  private static final RawAnimation ACTIVE_SPIN = RawAnimation.begin().thenPlay("active");
 
   public AtlasDeviceBlockEntity(BlockPos pos, BlockState state) {
     super(BlockEntityLoader.ATLAS_DEVICE_BLOCK_ENTITY, pos, state);
@@ -107,19 +99,16 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements IAnimatable {
   }
 
   @Override
-  public void registerControllers(AnimationData animationData) {
-    animationData.addAnimationController(
-      new AnimationController<AtlasDeviceBlockEntity>(this, "controller", 0, this::predicate));
+  public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+    controllers.add(
+      new AnimationController<>(this, state -> {
+        return state.setAndContinue(ACTIVE_SPIN);
+      }));
   }
 
-  private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
-    event.getController().setAnimation(new AnimationBuilder().addAnimation("active", true));
-
-    return PlayState.CONTINUE;
-}
-
   @Override
-  public AnimationFactory getFactory() {
-    return this.factory;
+  public AnimatableInstanceCache getAnimatableInstanceCache() {
+    // TODO Auto-generated method stub
+    return this.animationCache;
   }
 }

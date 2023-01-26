@@ -9,7 +9,6 @@ import io.sandbox.zones.config.ElytraConfig;
 import io.sandbox.zones.config.PlayerRespawnConfig;
 import io.sandbox.zones.items.ItemLoader;
 import io.sandbox.zones.processors.ProcessorLoader;
-import io.sandbox.zones.screens.ScreenLoader;
 import io.sandbox.zones.zone.ZoneManagerStore;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;

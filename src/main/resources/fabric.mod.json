@@ -32,7 +32,7 @@
   "depends": {
     "fabricloader": ">=0.14.11",
     "fabric": "*",
-    "geckolib3": "*",
+    "geckolib": "*",
     "minecraft": "~1.19",
     "java": ">=17",
     "sandbox-lib": "*"
