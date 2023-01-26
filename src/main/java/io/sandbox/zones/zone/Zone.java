@@ -27,6 +27,7 @@ import net.minecraft.entity.Entity.RemovalReason;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -258,6 +259,10 @@ public class Zone {
         }
     }
 
+    public void entityKilledBy(Entity entity, LivingEntity killedEntity) {
+        Main.LOGGER.info("Entity was killed: " + killedEntity.getDisplayName());
+    }
+
     public List<BlockPos> getBlockList() {
         return this.buildConfig.blockList;
     }
@@ -361,10 +366,10 @@ public class Zone {
         MobDetails mobDetails = new MobDetails();
         MobDefinition mobDefinition = this.zoneConfig.mobs.getRandomMob(this.difficulty, isBoss);
         EntityType<?> entity = Registry.ENTITY_TYPE.get(new Identifier(mobDefinition.mobType));
-        MobEntity mob = (MobEntity) entity.create((World) world);
+        MobEntity mob = (MobEntity) entity.create((World) world); 
 
         mobDetails.expMultiplier = mobDefinition.xpMultiplier != null ? mobDefinition.xpMultiplier : 0;
-        mob.setCustomName(Text.of(isBoss ? "Da Boss" : "Walker"));
+        // mob.setCustomName(Text.of(isBoss ? "Da Boss" : "Walker"));
 
         String lootTable = ZoneConfig.getLootTableAtLevel(this.difficulty, zoneConfig.defaultLootTables);
         if (mobDefinition.lootTables != null) {

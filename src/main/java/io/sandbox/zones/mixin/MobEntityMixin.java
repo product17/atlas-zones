@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import io.sandbox.zones.zone.Zone;
-import io.sandbox.zones.zone.ZoneManager;
+import io.sandbox.zones.zone.ZoneManagerStore;
 import io.sandbox.zones.zone.data_types.MobDetails;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -25,7 +25,7 @@ public abstract class MobEntityMixin extends LivingEntity {
   @Inject(method = "getXpToDrop", at = @At("RETURN"), cancellable = true)
   public void getXpToDrop(CallbackInfoReturnable<Integer> cir) {
     UUID mobId = this.getUuid();
-    Zone zone = ZoneManager.getZoneByMobId(mobId);
+    Zone zone = ZoneManagerStore.getZoneByMobId(mobId);
     if (zone != null) {
       MobDetails mobDetails = zone.getMobById(mobId);
       if (mobDetails != null && mobDetails.expMultiplier != null) {

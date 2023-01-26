@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import io.sandbox.zones.zone.Zone;
-import io.sandbox.zones.zone.ZoneManager;
+import io.sandbox.zones.zone.ZoneManagerStore;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
@@ -24,7 +24,7 @@ public abstract class PlayerEntityMixin extends Entity {
   @Inject(method = "dropInventory", at = @At("HEAD"), cancellable = true)
   public void safeInv(CallbackInfo ci) {
     UUID playerId = this.getUuid();
-    Zone zone = ZoneManager.getZoneByPlayerId(playerId);
+    Zone zone = ZoneManagerStore.getZoneByPlayerId(playerId);
     if (zone != null && zone.shouldKeepInventory(playerId)) {
       // cancel the dropInventory method
       ci.cancel();

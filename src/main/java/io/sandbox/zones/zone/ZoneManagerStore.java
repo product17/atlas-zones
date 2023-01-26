@@ -9,11 +9,15 @@ import io.sandbox.zones.Main;
 import io.sandbox.zones.config.data_types.StructurePoolConfig;
 import io.sandbox.zones.config.data_types.ZoneConfig;
 import io.sandbox.zones.zone.data_types.DimensionStartPoints;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -71,9 +75,10 @@ public class ZoneManagerStore {
 
   public static Zone getZoneAtLocation(BlockPos blockPos) {
     for (Zone zone : ZoneManagerStore.activeZones.values()) {
-        if (zone.matchEntryPoint(blockPos)) {
-            return zone;
-        };
+      if (zone.matchEntryPoint(blockPos)) {
+        return zone;
+      }
+      ;
     }
 
     return null;
@@ -105,7 +110,7 @@ public class ZoneManagerStore {
     return 0L;
   }
 
-  public static void initDatapackLoader() {
+  public static void init() {
     ResourceManagerHelper.get(ResourceType.SERVER_DATA)
         .registerReloadListener(new SimpleSynchronousResourceReloadListener() {
           @Override
@@ -117,7 +122,7 @@ public class ZoneManagerStore {
           public void reload(ResourceManager manager) {
             // Load all template pools for reference later
             Map<Identifier, Resource> templateList = manager.findResources("worldgen/template_pool", path -> true);
-            System.out.println("Templates: " + templateList.keySet().toString());
+            Main.LOGGER.info("Templates: " + templateList.keySet().toString());
             for (Resource resource : templateList.values()) {
               StructurePoolConfig poolConfig = new Config<StructurePoolConfig>(StructurePoolConfig.class, resource)
                   .getConfig();
@@ -126,11 +131,19 @@ public class ZoneManagerStore {
 
             // Load Sandbox Zones from datapacks
             Map<Identifier, Resource> zoneList = manager.findResources(Main.modId, path -> true);
-            System.out.println("ZoneListV2: " + zoneList.keySet().toString());
+            Main.LOGGER.info("ZoneListV2: " + zoneList.keySet().toString());
             for (Resource resource : zoneList.values()) {
               ZoneConfig zoneConfig = new Config<ZoneConfig>(ZoneConfig.class, resource).getConfig();
               ZoneManagerStore.zoneConfigs.put(zoneConfig.name, zoneConfig);
             }
+          }
+        });
+
+    ServerEntityCombatEvents.AFTER_KILLED_OTHER_ENTITY
+        .register((ServerWorld world, Entity entity, LivingEntity killedEntity) -> {
+          Zone zone = ZoneManagerStore.getZoneByMobId(killedEntity.getUuid());
+          if (zone != null) {
+            zone.entityKilledBy(entity, killedEntity);
           }
         });
   }
@@ -146,7 +159,7 @@ public class ZoneManagerStore {
   public static void removeMobFromZones(UUID mobId) {
     Zone zone = ZoneManager.getZoneByMobId(mobId);
     if (zone != null) {
-        zone.removeMobById(mobId);
+      zone.removeMobById(mobId);
     }
 
     ZoneManagerStore.mobToZoneMap.remove(mobId);

@@ -1,5 +1,7 @@
 package io.sandbox.zones.client.atlas_device;
 
+import javax.annotation.Nullable;
+
 import io.sandbox.zones.block_entities.AtlasDeviceBlockEntity;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -20,8 +22,8 @@ public class AtlasDeviceBlockRenderer extends GeoBlockRenderer<AtlasDeviceBlockE
     AtlasDeviceBlockEntity animatable,
     float partialTicks,
     MatrixStack stack,
-    VertexConsumerProvider renderTypeBuffer,
-    VertexConsumer vertexBuilder,
+    @Nullable VertexConsumerProvider renderTypeBuffer,
+    @Nullable VertexConsumer vertexBuilder,
     int PackedLightIn,
     Identifier textureLocation
   ) {

@@ -7,9 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.Gson;
 
-import io.sandbox.zones.inventories.AtlasDeviceInventory;
-import io.sandbox.zones.screens.AtlasDeviceConfigGui;
-import io.sandbox.zones.screens.data_types.CurrentZoneData;
 import io.sandbox.zones.zone.Zone;
 import io.sandbox.zones.zone.ZoneManager;
 import io.sandbox.zones.zone.ZoneManagerStore;
@@ -17,7 +14,6 @@ import io.sandbox.zones.zone.ZoneManagerV2;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.command.argument.DimensionArgumentType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
@@ -38,7 +34,7 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
-public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceInventory, ExtendedScreenHandlerFactory, IAnimatable {
+public class AtlasDeviceBlockEntity extends BlockEntity implements IAnimatable {
   private static final String BUILDING_ZONE_FIELD = "building_zone";
   public static final String CONFING_UPDATE_EVENT = "button_selected";
   private ArrayList<String> targetZoneList = new ArrayList<>(); // list of zones that can be selected
@@ -81,16 +77,6 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
   }
 
   @Override
-  public DefaultedList<ItemStack> getItems() {
-    return items;
-  }
-
-  @Override
-  public boolean canPlayerUse(PlayerEntity player) {
-    return pos.isWithinDistance(player.getBlockPos(), 4.5);
-  }
-
-  @Override
   public void readNbt(NbtCompound nbt) {
     super.readNbt(nbt);
     Inventories.readNbt(nbt, items);
@@ -118,91 +104,6 @@ public class AtlasDeviceBlockEntity extends BlockEntity implements AtlasDeviceIn
     }
 
     super.writeNbt(nbt);
-  }
-
-  @Override
-  public Text getDisplayName() {
-    // Using the block name as the screen title
-    // return new TranslatableText(getCachedState().getBlock().getTranslationKey());
-    return Text.of("Atlas Device");
-  }
-
-  @Override
-  public ScreenHandler createMenu(int syncId, PlayerInventory inventory, PlayerEntity player) {
-    // This method only fires on the server
-
-    if (isConfigMenu(player)) {
-      // Admin... setting up the configs for the block
-      AtlasDeviceConfigGui configWindow = new AtlasDeviceConfigGui(syncId, inventory);
-
-      // ScreenNetworking.of(configWindow, NetworkSide.SERVER).receive(Main.id(CONFING_UPDATE_EVENT + syncId), buf -> {
-      //   Gson gson = new Gson();
-      //   String jsonData = buf.readString();
-      //   AtlasDeviceConfigData updatedConfig = gson.fromJson(jsonData, AtlasDeviceConfigData.class);
-      //   System.out.println(updatedConfig.selectedZoneList);
-      //   this.targetZoneList = updatedConfig.selectedZoneList;
-      // });
-
-      return configWindow;
-    }
-
-    return null;
-
-    // AtlasDeviceGui uiWindow = new AtlasDeviceGui(syncId, inventory, this);
-    // ScreenNetworking screenNetworking = ScreenNetworking.of(uiWindow, NetworkSide.SERVER);
-
-    // screenNetworking.receive(uiWindow.selectEventId, buf -> {
-    //   String buttonPress = buf.readString();
-    //   System.out.println("Button was pressed: " + buttonPress + " : " + pos.toShortString() + " : " + pos.toString());
-
-    //   Optional<Zone> zoneOpt = ZoneManager.generateZone(world, inventory.player, pos, buttonPress);
-    //   if (zoneOpt.isPresent()) {
-    //     // TODO: emit zone selection to other player in inventory
-    //     this.zoneInstanceId = zoneOpt.get().getId();
-    //     System.out.println("Zone exists");
-    //   }
-    // });
-
-    // screenNetworking.receive(uiWindow.playerEnterEventId, buf -> {
-    //   if (this.zoneInstanceId != null && ZoneManager.getZone(this.zoneInstanceId) != null) {
-    //     // TODO: Check that zone exists too...
-    //     ZoneManager.joinZone(this.zoneInstanceId, inventory.player);
-    //   }
-    // });
-
-    // return uiWindow;
-  }
-
-  @Override
-  public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-    Gson gson = new Gson();
-
-    // if (this.isConfigMenu(player)) {
-    //   AtlasDeviceConfigData configData = new AtlasDeviceConfigData();
-    //   configData.zoneList = new ArrayList<String>(LoadConfig.zones.keySet());
-    //   configData.selectedZoneList = this.targetZoneList;
-    //   String json = gson.toJson(configData);
-
-    //   buf.writeString(json);
-    //   return;
-    // }
-
-    Zone existingZone = ZoneManager.getZoneAtLocation(pos);
-    CurrentZoneData zoneData = new CurrentZoneData();
-    zoneData.zoneName = "piglin_gate:base_lab";
-    zoneData.blockPos = pos;
-    zoneData.active = existingZone != null;
-    if (existingZone == null) {
-      Long cooldown = player.getWorld().getTime() - ZoneManager.getZoneCooldown(pos);
-      if (cooldown < ZoneManager.DEFAULT_COOLDOWN_TICKS) {
-        zoneData.cooldownLeft = cooldown;
-      }
-    }
-
-    System.out.println(gson.toJson(zoneData));
-
-    // TODO: pull the string from config
-    buf.writeString(gson.toJson(zoneData));
   }
 
   @Override

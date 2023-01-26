@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.12-SNAPSHOT' // check these on https://fabricmc.net/develop
+	id 'fabric-loom' version '1.0-SNAPSHOT' // check these on https://fabricmc.net/develop
 	id 'maven-publish'
 }
 
@@ -38,9 +38,9 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	modImplementation include("io.github.cottonmc:LibGui:${project.libgui_version}")
-	modImplementation 'software.bernie.geckolib:geckolib-fabric-1.19:3.1.20'
+	modImplementation "software.bernie.geckolib:geckolib-fabric-${project.geckolib_version}"
 
-	modImplementation "io.sandbox.lib:sandbox-lib-1.19.2+2022-09-27r9"
+	modImplementation "io.sandbox.lib:sandbox-lib-${project.sandbox_lib_version}"
 
 	// Uncomment the following line to enable the deprecated Fabric API modules. 
 	// These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.

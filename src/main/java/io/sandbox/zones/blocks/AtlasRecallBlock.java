@@ -1,7 +1,6 @@
 package io.sandbox.zones.blocks;
 
 import io.sandbox.zones.zone.Zone;
-import io.sandbox.zones.zone.ZoneManager;
 import io.sandbox.zones.zone.ZoneManagerStore;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

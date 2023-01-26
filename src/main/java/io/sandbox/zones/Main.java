@@ -27,7 +27,7 @@ public class Main implements ModInitializer {
     LOGGER.info("Loading mod: " + modId);
 
     // Load in datapacks
-    ZoneManagerStore.initDatapackLoader();
+    ZoneManagerStore.init();
     ProcessorLoader.init();
 
     // Initialize a main config
@@ -49,7 +49,6 @@ public class Main implements ModInitializer {
     ItemLoader.init();
     BlockLoader.init();
     BlockEntityLoader.init();
-    ScreenLoader.init();
     
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
 		// However, some things (like resources) may still be uninitialized.

@@ -21,9 +21,6 @@ public class CleanupProcessor extends ZoneProcessorBase {
         StructureBlockInfo structureBlockInfo,
         StructurePlacementData var6
     ) {
-        if (structureBlockInfo.pos == null) {
-            System.out.println("this one is null");
-        }
         this.config.blockList.add(structureBlockInfo.pos);
 
         return structureBlockInfo;
