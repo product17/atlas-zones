@@ -1,6 +1,5 @@
 package io.sandbox.zones.blocks;
 
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,7 +9,6 @@ import io.sandbox.zones.block_entities.BlockEntityLoader;
 import io.sandbox.zones.zone.Zone;
 import io.sandbox.zones.zone.ZoneManagerStore;
 import io.sandbox.zones.zone.ZoneManagerV2;
-import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
@@ -21,7 +19,6 @@ import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -31,8 +28,6 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.StructureAccessor;
-import net.minecraft.world.gen.structure.Structure;
 
 public class AtlasDeviceBlock extends BlockWithEntity {
   public static final String name = "atlas_device_block";
@@ -77,16 +72,12 @@ public class AtlasDeviceBlock extends BlockWithEntity {
       // }
 
       if (!world.isClient) {
-        // if (AtlasDeviceBlockEntity.isConfigMenu(player)) {
-        //   // Currently opens the Config menu for Sneaking Creative mode
-        //   player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
-        // } else {
-          StructureAccessor structureAccessor = ((ServerWorld)world).getStructureAccessor();
-          Map<Structure, LongSet> structures = structureAccessor.getStructureReferences(pos);
-          Main.LOGGER.info("STRUCTURE: " + structures.keySet());
+          // StructureAccessor structureAccessor = ((ServerWorld)world).getStructureAccessor();
+          // Map<Structure, LongSet> structures = structureAccessor.getStructureReferences(pos);
+          // Main.LOGGER.info("STRUCTURE: " + structures.keySet());
           Long cooldownStart = ZoneManagerStore.getZoneCooldown(world.getDimensionKey().getValue().toString(), pos);
           Long cooldown = world.getTime() - cooldownStart;
-          if (cooldownStart > 0 && cooldown < ZoneManagerV2.DEFAULT_COOLDOWN_TICKS && !player.isCreative()) {
+          if (cooldownStart > 0 && cooldown < ZoneManagerV2.DEFAULT_COOLDOWN_TICKS) {
             Long cooldownLeft = (long) Math.ceil((ZoneManagerV2.DEFAULT_COOLDOWN_TICKS - cooldown) / 20);
             Long minutes = Math.floorDiv(cooldownLeft, 60);
             Long seconds = cooldownLeft % 60;
@@ -111,7 +102,6 @@ public class AtlasDeviceBlock extends BlockWithEntity {
               }
             }
           }
-        // }
 
         return ActionResult.SUCCESS;
       }

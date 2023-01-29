@@ -80,6 +80,7 @@ public class ZoneManagerV2 {
       // Place the Start Structure
       startStructure.place(serverWorld, startLocation, null, placementData,
           (net.minecraft.util.math.random.Random) ZoneManagerV2.random, 0);
+          System.out.println(startLocation);
       roomData.startBlockPos = startLocation;
       roomData.size = startStructure.getSize();
 

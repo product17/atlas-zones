@@ -275,7 +275,7 @@ public class Zone {
         return this.difficulty;
     }
 
-    public String getDimentionType() {
+    public String getDimensionType() {
         return this.dimentionType;
     }
 
@@ -448,6 +448,7 @@ public class Zone {
         Main.LOGGER.info("Removing Player from zone: " + servPlayer.getName());
 
         this.players.remove(player);
+        PreviousPos previousPos = this.previousPlayerPositions.get(player.getUuid());
         if (this.getPlayerCount() <= 0) {
             this.cleanupMobs();
             this.cleanupBlocks();
@@ -455,10 +456,9 @@ public class Zone {
 
             Main.LOGGER.info("Cleaning up Zone");
 
-            ZoneManagerStore.cleanupZone(player.getWorld(), this.id);
+            ZoneManagerStore.cleanupZone(this.world.getServer().getWorld(previousPos.worldKey), this.id);
         }
 
-        PreviousPos previousPos = this.previousPlayerPositions.get(player.getUuid());
         ServerWorld prevWorld = this.world.getServer().getWorld(previousPos.worldKey);
 
         FabricDimensions.teleport(

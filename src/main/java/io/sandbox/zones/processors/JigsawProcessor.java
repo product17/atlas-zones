@@ -43,6 +43,7 @@ public class JigsawProcessor extends ZoneProcessorBase {
       // Generate Jigsaw Entity
       JigsawBlock block = (JigsawBlock) state.getBlock();
       JigsawBlockEntity blockEntity = (JigsawBlockEntity) block.createBlockEntity(structureBlockInfo.pos, state);
+      System.out.println("JIGSAW: " + jigsawTarget);
       if (this.pathTargets.get(jigsawTarget) != null) {
         // If target is in the list of dungeon paths
         // send structureBlock info so we can grab the pool and grab structure to place

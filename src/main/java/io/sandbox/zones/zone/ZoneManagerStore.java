@@ -33,7 +33,8 @@ public class ZoneManagerStore {
   public static void activateZoneCooldown(String dimensionName, BlockPos blockPos, Long time) {
     Map<BlockPos, Long> dimensionZonesOnCooldown = zonesOnCooldown.get(dimensionName);
     if (dimensionZonesOnCooldown == null) {
-      dimensionZonesOnCooldown = new HashMap<>();
+      zonesOnCooldown.put(dimensionName, new HashMap<>());
+      dimensionZonesOnCooldown = zonesOnCooldown.get(dimensionName);
     }
 
     dimensionZonesOnCooldown.put(blockPos, time);
@@ -53,8 +54,9 @@ public class ZoneManagerStore {
   }
 
   public static void cleanupZone(World world, UUID zoneId) {
-    Zone zone = ZoneManagerStore.activeZones.remove(zoneId);
-    ZoneManagerStore.deactivateZoneCooldown(zone.getDimentionType(), zone.blockPos);
+    Zone zone = ZoneManagerStore.getActiveZone(zoneId);
+    ZoneManagerStore.activateZoneCooldown(world.getDimensionKey().getValue().toString(), zone.blockPos, world.getTime());
+    ZoneManagerStore.activeZones.remove(zoneId);
   }
 
   public static Zone getActiveZone(UUID id) {
@@ -122,11 +124,12 @@ public class ZoneManagerStore {
           public void reload(ResourceManager manager) {
             // Load all template pools for reference later
             Map<Identifier, Resource> templateList = manager.findResources("worldgen/template_pool", path -> true);
-            Main.LOGGER.info("Templates: " + templateList.keySet().toString());
-            for (Resource resource : templateList.values()) {
-              StructurePoolConfig poolConfig = new Config<StructurePoolConfig>(StructurePoolConfig.class, resource)
-                  .getConfig();
-              ZoneManagerStore.poolConfigs.put(poolConfig.name, poolConfig);
+            for (Identifier resourceName : templateList.keySet()) {
+              if (!resourceName.toString().startsWith("minecraft:")) {
+                Main.LOGGER.info("Template Loading: " + resourceName);
+                StructurePoolConfig poolConfig = new Config<StructurePoolConfig>(StructurePoolConfig.class, templateList.get(resourceName)).getConfig();
+                ZoneManagerStore.poolConfigs.put(poolConfig.name, poolConfig);
+              }
             }
 
             // Load Sandbox Zones from datapacks
